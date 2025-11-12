@@ -21,18 +21,18 @@ export function Header() {
 
       {/* Desktop Navigation */}
       <nav className="hidden md:flex items-center">
-        <Link href="/charts" className="p-2">Charts</Link>
-        <Link href="/ai" className="p-2">AI</Link>
-        <Link href="/settings" className="p-2">Settings</Link>
+        <Link href="/charts" className="p-2 hover:scale-105 transition-transform duration-200">Charts</Link>
+        <Link href="/ai" className="p-2 hover:scale-105 transition-transform duration-200">AI</Link>
+        <Link href="/settings" className="p-2 hover:scale-105 transition-transform duration-200">Settings</Link>
         <ThemeSwitcher />
       </nav>
 
       {/* Mobile Navigation */}
       {isOpen && (
         <nav className="absolute top-16 left-0 w-full bg-primary flex flex-col items-center md:hidden">
-          <Link href="/charts" className="p-4" onClick={() => setIsOpen(false)}>Charts</Link>
-          <Link href="/ai" className="p-4" onClick={() => setIsOpen(false)}>AI</Link>
-          <Link href="/settings" className="p-4" onClick={() => setIsOpen(false)}>Settings</Link>
+          <Link href="/charts" className="p-4 hover:scale-105 transition-transform duration-200" onClick={() => setIsOpen(false)}>Charts</Link>
+          <Link href="/ai" className="p-4 hover:scale-105 transition-transform duration-200" onClick={() => setIsOpen(false)}>AI</Link>
+          <Link href="/settings" className="p-4 hover:scale-105 transition-transform duration-200" onClick={() => setIsOpen(false)}>Settings</Link>
           <div className="p-4">
             <ThemeSwitcher />
           </div>

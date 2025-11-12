@@ -3,11 +3,12 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { SeedData } from "../components/SeedData";
 import { ThemeProvider } from "../components/ThemeProvider";
+import { BackToTopButton } from "../components/BackToTopButton";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Fintech App",
+  title: "ChartGen",
   description: "A modern fintech dashboard",
 };
 
@@ -27,6 +28,7 @@ export default function RootLayout({
         >
           <SeedData />
           {children}
+          <BackToTopButton />
         </ThemeProvider>
       </body>
     </html>
