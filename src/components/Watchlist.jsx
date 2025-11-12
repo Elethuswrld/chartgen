@@ -1,6 +1,7 @@
 "use client";
 
 import { useRealtime } from '../lib/hooks/useRealtime';
+import { WatchlistSkeleton } from './WatchlistSkeleton';
 
 export function Watchlist() {
   const watchlistData = useRealtime('watchlist/user-default');
@@ -21,7 +22,7 @@ export function Watchlist() {
           ))}
         </ul>
       ) : (
-        <p>Loading watchlist...</p>
+        <WatchlistSkeleton />
       )}
     </div>
   );
