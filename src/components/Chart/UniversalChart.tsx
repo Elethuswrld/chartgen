@@ -1,200 +1,221 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Select, { SingleValue } from "react-select";
+import {
+  createChart,
+  CrosshairMode,
+  ColorType,
+  IChartApi,
+  ISeriesApi,
+  CandlestickData,
+} from "lightweight-charts";
 
-type SymbolOption = {
-  symbol: string;
-  label: string;
-  value: string;
-  type: "crypto" | "stock";
-};
+type SymbolOption = { symbol: string; type: "crypto" | "stock" | "forex" };
 
-export default function UniversalChart({
-  finnhubApiKey,
-}: {
-  finnhubApiKey: string;
-}) {
+export default function UniversalChart({ finnhubApiKey }: { finnhubApiKey: string }) {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
-  const chartRef = useRef<any>(null);
-  const candleSeriesRef = useRef<any>(null);
-  const initializedRef = useRef(false);
-
+  const chartRef = useRef<IChartApi | null>(null);
+  const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const [symbols, setSymbols] = useState<SymbolOption[]>([]);
-  const [selectedSymbol, setSelectedSymbol] = useState<SymbolOption | null>(
-    null
+  const [selectedSymbol, setSelectedSymbol] = useState<SymbolOption | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const candleDataRef = useRef<CandlestickData[]>([]);
+  const wsRef = useRef<WebSocket | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const filteredSymbols = symbols.filter((s) =>
+    s.symbol.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // ----------------------------------
-  // 1) Fetch Symbols (Dynamic Dropdown)
-  // ----------------------------------
+  // Fetch symbols (stocks + crypto)
   useEffect(() => {
-    async function loadSymbols() {
+    const fetchSymbols = async () => {
       try {
-        // STOCKS (Finnhub)
         const stockRes = await fetch(
           `https://finnhub.io/api/v1/stock/symbol?exchange=US&token=${finnhubApiKey}`
         );
         const stockData = await stockRes.json();
-
-        const stockList: SymbolOption[] = stockData.slice(0, 40).map((s: any) => ({
+        const stockSymbols: SymbolOption[] = stockData.map((s: any) => ({
           symbol: s.symbol,
-          label: s.symbol,
-          value: s.symbol,
           type: "stock",
         }));
 
-        // CRYPTO (Binance)
-        const cryptoRes = await fetch(
-          "https://api.binance.com/api/v3/exchangeInfo"
-        );
-        const cryptoData = await cryptoRes.json();
-
-        const cryptoList: SymbolOption[] = cryptoData.symbols
+        const binanceRes = await fetch("https://api.binance.com/api/v3/exchangeInfo");
+        const binanceData = await binanceRes.json();
+        const cryptoSymbols: SymbolOption[] = binanceData.symbols
           .filter((s: any) => s.status === "TRADING")
-          .slice(0, 40)
-          .map((s: any) => ({
-            symbol: s.symbol,
-            label: s.symbol,
-            value: s.symbol,
-            type: "crypto",
-          }));
+          .map((s: any) => ({ symbol: s.symbol, type: "crypto" }));
 
-        const fullList = [...stockList, ...cryptoList];
-
-        setSymbols(fullList);
-        setSelectedSymbol(fullList[0]);
+        const allSymbols = [...stockSymbols, ...cryptoSymbols];
+        setSymbols(allSymbols);
+        setSelectedSymbol(allSymbols[0]);
       } catch (err) {
-        console.error("Symbol loading error:", err);
+        console.error("Error fetching symbols:", err);
       }
-    }
-
-    loadSymbols();
+    };
+    fetchSymbols();
   }, [finnhubApiKey]);
 
-  // ----------------------------------
-  // 2) Initialize the Chart (Client Only)
-  // ----------------------------------
+  // Initialize chart
   useEffect(() => {
     if (!chartContainerRef.current) return;
-    if (initializedRef.current) return; // Prevent double init
 
-    initializedRef.current = true;
+    const chart = createChart(chartContainerRef.current, {
+      width: chartContainerRef.current.clientWidth,
+      height: chartContainerRef.current.clientHeight,
+      layout: {
+        background: { type: ColorType.Solid, color: "#0E1424" },
+        textColor: "white",
+      },
+      crosshair: { mode: CrosshairMode.Normal },
+      grid: {
+        vertLines: { color: "rgba(255,255,255,0.05)" },
+        horzLines: { color: "rgba(255,255,255,0.05)" },
+      },
+      rightPriceScale: { visible: true },
+      timeScale: { rightOffset: 10, barSpacing: 10, fixRightEdge: true },
+    });
 
-    async function initChart() {
-      try {
-        const {
-          createChart,
-          CrosshairMode,
-          ColorType,
-        } = await import("lightweight-charts");
+    chartRef.current = chart;
 
-        const chart = createChart(chartContainerRef.current, {
-          width: chartContainerRef.current.clientWidth,
-          height: chartContainerRef.current.clientHeight,
-          layout: {
-            background: { type: ColorType.Solid, color: "#0E1424" },
-            textColor: "#FFFFFF",
-          },
-          grid: {
-            vertLines: { color: "rgba(255,255,255,0.05)" },
-            horzLines: { color: "rgba(255,255,255,0.05)" },
-          },
-          crosshair: { mode: CrosshairMode.Normal },
-          timeScale: { borderColor: "rgba(255,255,255,0.1)" },
-          rightPriceScale: { borderColor: "rgba(255,255,255,0.1)" },
-        });
+    candleSeriesRef.current = chart.addCandlestickSeries({
+      upColor: "#22c55e",
+      downColor: "#ef4444",
+      borderUpColor: "#22c55e",
+      borderDownColor: "#ef4444",
+      wickUpColor: "#22c55e",
+      wickDownColor: "#ef4444",
+    });
 
-        const candleSeries = chart.addCandlestickSeries({
-          upColor: "#22c55e",
-          downColor: "#ef4444",
-          borderUpColor: "#22c55e",
-          borderDownColor: "#ef4444",
-          wickUpColor: "#22c55e",
-          wickDownColor: "#ef4444",
-        });
+    const handleResize = () => {
+      chart.applyOptions({
+        width: chartContainerRef.current!.clientWidth,
+        height: chartContainerRef.current!.clientHeight,
+      });
+    };
+    window.addEventListener("resize", handleResize);
 
-        chartRef.current = chart;
-        candleSeriesRef.current = candleSeries;
-
-        // Auto resize
-        const resize = () => {
-          chart.applyOptions({
-            width: chartContainerRef.current!.clientWidth,
-            height: chartContainerRef.current!.clientHeight,
-          });
-        };
-
-        window.addEventListener("resize", resize);
-
-        return () => {
-          window.removeEventListener("resize", resize);
-          chart.remove();
-        };
-      } catch (err) {
-        console.error("Chart initialization error:", err);
-      }
-    }
-
-    initChart();
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      chart.remove();
+    };
   }, []);
 
-  // ----------------------------------
-  // 3) Load Candlestick Data (Dynamic)
-  // ----------------------------------
+  // Fetch candles + live updates
   useEffect(() => {
     if (!selectedSymbol || !candleSeriesRef.current) return;
 
-    async function loadData() {
+    wsRef.current?.close();
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
+    const fetchCandles = async () => {
+      candleDataRef.current = [];
       try {
-        let data: any;
+        let data: CandlestickData[] = [];
 
-        if (selectedSymbol.type === "stock") {
-          const url = `https://finnhub.io/api/v1/stock/candle?symbol=${selectedSymbol.symbol}&resolution=D&count=100&token=${finnhubApiKey}`;
-          const res = await fetch(url);
-          const json = await res.json();
-
-          data = json.t.map((_: any, i: number) => ({
-            time: json.t[i],
-            open: json.o[i],
-            high: json.h[i],
-            low: json.l[i],
-            close: json.c[i],
-          }));
-        } else {
-          const url = `https://api.binance.com/api/v3/klines?symbol=${selectedSymbol.symbol}&interval=1d&limit=100`;
-          const res = await fetch(url);
-          const json = await res.json();
-
-          data = json.map((k: any) => ({
-            time: Math.floor(k[0] / 1000),
+        if (selectedSymbol.type === "crypto") {
+          const res = await fetch(
+            `https://api.binance.com/api/v3/klines?symbol=${selectedSymbol.symbol}&interval=1h&limit=100`
+          );
+          const klines = await res.json();
+          data = klines.map((k: any) => ({
+            time: k[0] / 1000,
             open: parseFloat(k[1]),
             high: parseFloat(k[2]),
             low: parseFloat(k[3]),
             close: parseFloat(k[4]),
           }));
+
+          wsRef.current = new WebSocket(
+            `wss://stream.binance.com:9443/ws/${selectedSymbol.symbol.toLowerCase()}@kline_1h`
+          );
+          wsRef.current.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            const k = msg.k;
+            candleSeriesRef.current?.update({
+              time: k.t / 1000,
+              open: parseFloat(k.o),
+              high: parseFloat(k.h),
+              low: parseFloat(k.l),
+              close: parseFloat(k.c),
+            });
+          };
+        } else {
+          const now = Math.floor(Date.now() / 1000);
+          const oneMonthAgo = now - 30 * 24 * 3600;
+          const res = await fetch(
+            `https://finnhub.io/api/v1/stock/candle?symbol=${selectedSymbol.symbol}&resolution=60&from=${oneMonthAgo}&to=${now}&token=${finnhubApiKey}`
+          );
+          const candles = await res.json();
+          if (candles.t) {
+            data = candles.t.map((t: number, i: number) => ({
+              time: t,
+              open: candles.o[i],
+              high: candles.h[i],
+              low: candles.l[i],
+              close: candles.c[i],
+            }));
+          }
+
+          intervalRef.current = setInterval(async () => {
+            try {
+              const latestRes = await fetch(
+                `https://finnhub.io/api/v1/stock/candle?symbol=${selectedSymbol.symbol}&resolution=60&from=${Math.floor(
+                  Date.now() / 1000 - 3600
+                )}&to=${Math.floor(Date.now() / 1000)}&token=${finnhubApiKey}`
+              );
+              const latest = await latestRes.json();
+              if (latest.t?.length) {
+                candleSeriesRef.current?.update({
+                  time: latest.t[latest.t.length - 1],
+                  open: latest.o[latest.o.length - 1],
+                  high: latest.h[latest.h.length - 1],
+                  low: latest.l[latest.l.length - 1],
+                  close: latest.c[latest.c.length - 1],
+                });
+              }
+            } catch (err) {
+              console.error("Error fetching live Finnhub candle:", err);
+            }
+          }, 60 * 1000);
         }
 
+        candleDataRef.current = data;
         candleSeriesRef.current.setData(data);
       } catch (err) {
-        console.error("Candle data loading error:", err);
+        console.error("Error fetching candles:", err);
       }
-    }
+    };
 
-    loadData();
+    fetchCandles();
+
+    return () => {
+      wsRef.current?.close();
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [selectedSymbol, finnhubApiKey]);
 
   return (
-    <div className="w-full h-full flex flex-col gap-4 bg-[#0E1424] p-4">
-      <Select
-        options={symbols}
-        value={selectedSymbol}
-        onChange={(o: SingleValue<SymbolOption>) => setSelectedSymbol(o)}
-        placeholder="Search symbols..."
-        className="text-black"
+    <div>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Search symbols"
       />
-
-      <div ref={chartContainerRef} className="flex-1 w-full rounded-md" />
+      <select
+        value={selectedSymbol?.symbol || ""}
+        onChange={(e) =>
+          setSelectedSymbol(symbols.find((s) => s.symbol === e.target.value) || null)
+        }
+      >
+        {filteredSymbols.map((s) => (
+          <option key={s.symbol} value={s.symbol}>
+            {s.symbol} ({s.type})
+          </option>
+        ))}
+      </select>
+      <div ref={chartContainerRef} style={{ height: "500px" }} />
     </div>
   );
 }
