@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useState, useMemo } from "react";
+import Link from "next/link";
+import dynamic from "next/dynamic";
+import { motion } from "framer-motion";
 
-// A simple star icon component
+// Star icon component
 const StarIcon = ({ isFilled, ...props }) => (
   <svg
     {...props}
@@ -11,190 +13,1290 @@ const StarIcon = ({ isFilled, ...props }) => (
     width="24"
     height="24"
     viewBox="0 0 24 24"
-    fill={isFilled ? 'currentColor' : 'none'}
+    fill={isFilled ? "currentColor" : "none"}
     stroke="currentColor"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className={`cursor-pointer ${
-      isFilled ? 'text-yellow-400' : 'text-gray-500 hover:text-yellow-400'
-    }`}
+    className={`cursor-pointer ${isFilled ? "text-yellow-400" : "text-gray-500 hover:text-yellow-400"}`}
   >
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 );
 
-// A simple sparkline chart component
-const Sparkline = ({ data, positive }) => (
-  <svg width="100%" height="40" viewBox="0 0 100 40" className="mt-4">
-    <path
-      d="M 0 20 L 10 25 L 20 15 L 30 20 L 40 10 L 50 18 L 60 22 L 70 12 L 80 18 L 90 25 L 100 20"
-      fill="none"
-      stroke={positive ? '#22c55e' : '#ef4444'}
-      strokeWidth="2"
-    />
-  </svg>
-);
+// Dynamic sparkline component
+const Sparkline = ({ data, positive }) => {
+  const path = data.map((y, i) => `${i * (100 / (data.length - 1))} ${40 - y}`).join(" L ");
+  return (
+    <svg width="100%" height="40" viewBox="0 0 100 40" className="mt-2">
+      <path d={`M ${path}`} fill="none" stroke={positive ? "#22c55e" : "#ef4444"} strokeWidth="2" />
+    </svg>
+  );
+};
 
+// Assets data
 const assets = {
-  forex: [
-    { pair: 'EUR/USD', price: '1.0843', change: '+0.42%' },
-    { pair: 'GBP/USD', price: '1.2731', change: '-0.15%' },
-    { pair: 'USD/JPY', price: '148.23', change: '+0.67%' },
-    { pair: 'AUD/USD', price: '0.6580', change: '+0.21%' },
-    { pair: 'USD/CAD', price: '1.3510', change: '-0.30%' },
-  ],
-  crypto: [
-    { pair: 'BTC/USD', price: '$67,420', change: '+3.8%' },
-    { pair: 'ETH/USD', price: '$3,450', change: '-1.2%' },
-    { pair: 'SOL/USD', price: '$148.55', change: '+5.1%' },
-    { pair: 'XRP/USD', price: '$0.52', change: '+2.3%' },
-    { pair: 'DOGE/USD', price: '$0.15', change: '-0.5%' },
-  ],
   stocks: [
+    { pair: 'S&P 500', name: '500 largest US companies', price: '5,477.90', change: '+0.25%' },
+    { pair: 'DJIA', name: '30 major US blue-chip stocks', price: '39,150.33', change: '+0.04%' },
+    { pair: 'NASDAQ', name: 'Heavily weighted toward technology stocks', price: '17,689.36', change: '-0.18%' },
+    { pair: 'Euro Stoxx 50', name: '50 largest blue-chip stocks in the Eurozone', price: '4,906.50', change: '-0.82%' },
+    { pair: 'FTSE 100', name: '100 largest companies on the LSE', price: '8,179.68', change: '-0.55%' },
+    { pair: 'DAX 40', name: '40 largest German blue-chip companies', price: '18,177.63', change: '-0.96%' },
+    { pair: 'Nikkei 225', name: '225 largest Japanese companies', price: '38,596.47', change: '-0.09%' },
+    { pair: 'Hang Seng', name: 'Major companies in Hong Kong', price: '18,027.71', change: '+0.94%' },
+    { pair: 'Nifty 50', name: '50 top-performing companies on the NSE', price: '23,516.00', change: '+0.15%' },
     { pair: 'AAPL', price: '$171.39', change: '+0.84%' },
     { pair: 'TSLA', price: '$173.52', change: '-2.03%' },
     { pair: 'AMZN', price: '$184.88', change: '+1.02%' },
     { pair: 'GOOGL', price: '$170.11', change: '+1.50%' },
     { pair: 'MSFT', price: '$420.72', change: '+0.95%' },
+    { pair: 'NVDA', price: '$905.10', change: '+2.5%' },
+    { pair: 'META', price: '$490.22', change: '-0.5%' },
+    { pair: 'NFLX', price: '$610.40', change: '+1.2%' },
+    { pair: 'JPM', price: '$195.80', change: '-0.8%' },
+    { pair: 'V', price: '$275.60', change: '+0.4%' },
+    { pair: 'CN50', name: 'China 50', price: '12,345.67', change: '+0.50%' },
+    { pair: 'DXY', name: 'US Dollar Index', price: '105.50', change: '-0.20%' },
+    { pair: 'ABAQ', name: 'ABA Community Bank NASDAQ', price: '123.45', change: '+0.80%' },
+    { pair: 'XABQ', name: 'ABA NASDAQ Community Bank Total Return', price: '234.56', change: '+0.90%' },
+    { pair: 'OMXAFGX', name: 'Affarsvarldens General Index', price: '1,234.56', change: '+0.70%' },
+    { pair: 'AUM', name: 'Australia Dollar US Dollar ISE Spot', price: '0.6655', change: '+0.30%' },
+    { pair: 'FR40', name: 'France 40 (CAC 40 Futures)', price: '7,654.32', change: '-0.60%' },
+    { pair: 'HK50', name: 'Hong Kong 50 (Hang Seng Index Futures)', price: '18,000.00', change: '+0.90%' },
+    { pair: 'IT40', name: 'Italia MIB40 (FTSE MIB Futures)', price: '33,456.78', change: '-0.70%' },
+    { pair: 'SP35', name: 'Spain 35 (IBEX 35 Futures)', price: '11,123.45', change: '-0.50%' },
+    { pair: 'US30', name: 'US 30 (Dow Jones Industrial Average Futures)', price: '39,100.00', change: '+0.10%' },
+    { pair: 'US500', name: 'US 500 (S&P 500 Futures)', price: '5,480.00', change: '+0.30%' },
+    { pair: 'US100', name: 'US Tech 100 (NASDAQ 100 Futures)', price: '19,700.00', change: '-0.10%' },
+  ],
+  crypto: [
+    // Original Crypto Pairs
+    { pair: "BTC/USD", name: "Bitcoin", price: "$64,150.00", change: "+0.5%" },
+    { pair: "ETH/USD", name: "Ethereum", price: "$3,510.50", change: "+1.2%" },
+    { pair: "USDT/USD", name: "Tether", price: "$1.00", change: "0.00%" },
+    { pair: "BNB/USD", name: "Binance Coin", price: "$586.00", change: "-0.8%" },
+    { pair: "SOL/USD", name: "Solana", price: "$134.20", change: "+2.1%" },
+    { pair: "USDC/USD", name: "USD Coin", price: "$1.00", change: "0.00%" },
+    { pair: "XRP/USD", name: "Ripple", price: "$0.4850", change: "-0.5%" },
+    { pair: "DOGE/USD", name: "Dogecoin", price: "$0.1245", change: "+1.8%" },
+    { pair: "ADA/USD", name: "Cardano", price: "$0.45", change: "-2.1%" },
+    { pair: "AVAX/USD", name: "Avalanche", price: "$38.20", change: "+4.2%" },
+    { pair: "DOT/USD", name: "Polkadot", price: "$7.10", change: "+0.8%" },
+    { pair: "LINK/USD", name: "Chainlink", price: "$14.50", change: "-1.8%" },
+    
+    // NEW CRYPTO PAIRS (Placeholder Data)
+    { pair: "AAVEBTC", name: "Aave Token / Bitcoin", price: "0.00120", change: "+0.55%" },
+    { pair: "AAVEUSDT", name: "Aave Token / USDT", price: "95.50", change: "+1.10%" },
+    { pair: "AAVEETH", name: "Aave Token / Ethereum", price: "0.0270", change: "+0.80%" },
+    { pair: "GHSTUSDT", name: "Aavegotchi GHST Token / USDT", price: "1.50", change: "-0.25%" },
+    { pair: "ACMBTC", name: "AC Milan / Bitcoin", price: "0.000005", change: "-1.15%" },
+    { pair: "ACMUSDT", name: "AC Milan / USDT", price: "3.20", change: "-0.50%" },
+    { pair: "ACABTC", name: "Acala / Bitcoin", price: "0.000010", change: "+0.30%" },
+    { pair: "ACAUSDT", name: "Acala / USDT", price: "0.65", change: "+0.90%" },
+    { pair: "AGLDBTC", name: "Adventure Gold / Bitcoin", price: "0.000025", change: "-0.70%" },
+    { pair: "AGLDUSDT", name: "Adventure Gold / USDT", price: "1.80", change: "-0.30%" },
+    { pair: "ELFUSDT", name: "Aelf / USDT", price: "0.50", change: "+1.50%" },
+    { pair: "ELFBTC", name: "Aelf / Bitcoin", price: "0.000008", change: "+0.95%" },
+    { pair: "ELFETH", name: "Aelf / Ethereum", price: "0.00015", change: "+0.60%" },
+    { pair: "AERGOBTC", name: "AERGO / Bitcoin", price: "0.000007", change: "-0.40%" },
+    { pair: "AERGOUSDT", name: "AERGO / USDT", price: "0.40", change: "-0.10%" },
+    { pair: "AMBUSDT", name: "AirDAO / USDT", price: "0.05", change: "+0.25%" },
+    { pair: "AMBBTC", name: "AirDAO / Bitcoin", price: "0.000001", change: "+0.05%" },
+    { pair: "ASTBTC", name: "AirSwap / Bitcoin", price: "0.000009", change: "-0.80%" },
+    { pair: "ASTETH", name: "AirSwap / Ethereum", price: "0.00016", change: "-0.50%" },
+    { pair: "ASTUSDT", name: "AirSwap / USDT", price: "0.45", change: "-0.20%" },
+    { pair: "AKROUSDT", name: "Akropolis / USDT", price: "0.005", change: "+3.00%" },
+    { pair: "ALCXUSDT", name: "Alchemix / USDT", price: "25.00", change: "+1.20%" },
+    { pair: "ALCXBTC", name: "Alchemix / Bitcoin", price: "0.00040", change: "+0.70%" },
+    { pair: "ACHUSDT", name: "Alchemy / USDT", price: "0.02", change: "-0.60%" },
+    { pair: "ACHBTC", name: "Alchemy / Bitcoin", price: "0.0000003", change: "-0.40%" },
+    { pair: "ALGOUSDT", name: "Algorand / USDT", price: "0.20", change: "+1.80%" },
+    { pair: "ALGOBTC", name: "Algorand / Bitcoin", price: "0.000003", change: "+1.40%" },
+    { pair: "ALGOETH", name: "Algorand / Ethereum", price: "0.00006", change: "+1.00%" },
+    { pair: "ALICEBTC", name: "ALICE [My Neighbor Alice] / BTC", price: "0.00004", change: "-0.90%" },
+    { pair: "ALICEUSDT", name: "ALICE [My Neighbor Alice] / USDT", price: "2.50", change: "-0.40%" },
+    { pair: "TLMBTC", name: "Alien Worlds Trilium / Bitcoin", price: "0.0000005", change: "+2.50%" },
+    { pair: "TLMUSDT", name: "Alien Worlds Trilium / USDT", price: "0.03", change: "+1.90%" },
+    { pair: "ALPACAUSDT", name: "AlpacaToken / USDT", price: "0.28", change: "-0.15%" },
+    { pair: "ALPACABTC", name: "AlpacaToken / Bitcoin", price: "0.000004", change: "-0.05%" },
+    { pair: "ALPHAUSDT", name: "Alpha Venture DAO / USDT", price: "0.15", change: "+0.65%" },
+    { pair: "ALPHABTC", name: "Alpha Venture DAO / Bitcoin", price: "0.000002", change: "+0.50%" },
+    { pair: "ALPINEEUR", name: "ALPINE Fan Token / EUR", price: "2.00", change: "-0.30%" },
+    { pair: "ALPINEUSDT", name: "ALPINE Fan Token / USDT", price: "2.15", change: "-0.10%" },
+    { pair: "ALPINEBTC", name: "ALPINE Fan Token / Bitcoin", price: "0.00003", change: "-0.50%" },
+    { pair: "ADXBTC", name: "Ambire Wallet / Bitcoin", price: "0.000006", change: "+0.40%" },
+    { pair: "ADXUSDT", name: "Ambire Wallet / USDT", price: "0.35", change: "+1.00%" },
+    { pair: "ADXETH", name: "Ambire Wallet / Ethereum", price: "0.00010", change: "+0.70%" },
+    { pair: "AMPBTC", name: "Amp / Bitcoin", price: "0.00000005", change: "-0.90%" },
+    { pair: "AMPUSDT", name: "Amp / USDT", price: "0.003", change: "-0.50%" },
+    { pair: "FORTHBTC", name: "Ampleforth Governance / Bitcoin", price: "0.00005", change: "+1.50%" },
+    { pair: "FORTHUSDT", name: "Ampleforth Governance / USDT", price: "3.00", change: "+2.10%" },
+    { pair: "ANKRBTC", name: "Ankr Network / Bitcoin", price: "0.000001", change: "-0.10%" },
+    { pair: "ANKRUSDT", name: "Ankr Network / USDT", price: "0.04", change: "+0.40%" },
+    { pair: "APEUSDT", name: "ApeCoin / USDT", price: "1.40", change: "+0.80%" },
+    { pair: "APEBRL", name: "ApeCoin / BRL", price: "7.00", change: "+0.70%" },
+    { pair: "APEBTC", name: "ApeCoin / Bitcoin", price: "0.00002", change: "+0.30%" },
+    { pair: "APEETH", name: "ApeCoin / Ethereum", price: "0.00040", change: "+0.50%" },
+    { pair: "APEEUR", name: "ApeCoin / EUR", price: "1.35", change: "+0.60%" },
+    { pair: "API3BTC", name: "API3 / Bitcoin", price: "0.00006", change: "-0.60%" },
+    { pair: "API3USDT", name: "API3 / USDT", price: "4.00", change: "-0.30%" },
+    { pair: "APTUSDT", name: "Aptos / USDT", price: "5.50", change: "+1.50%" },
+    { pair: "APTBRL", name: "Aptos / BRL", price: "27.50", change: "+1.30%" },
+    { pair: "APTETH", name: "Aptos / Ethereum", price: "0.00160", change: "+0.90%" },
+    { pair: "APTBTC", name: "Aptos / Bitcoin", price: "0.00008", change: "+1.10%" },
+    { pair: "APTEUR", name: "Aptos / EUR", price: "5.30", change: "+1.40%" },
+    { pair: "ANTBTC", name: "Aragon Network Token / Bitcoin", price: "0.00010", change: "-0.80%" },
+    { pair: "ANTUSDT", name: "Aragon Network Token / USDT", price: "6.00", change: "-0.40%" },
+    { pair: "ARBEUR", name: "Arbitrum / EUR", price: "0.90", change: "+1.00%" },
+    { pair: "ARBBTC", name: "Arbitrum / Bitcoin", price: "0.000015", change: "+0.70%" },
+    { pair: "ARBETH", name: "Arbitrum / Ethereum", price: "0.00025", change: "+0.90%" },
+    { pair: "ARBUSDT", name: "Arbitrum / USDT", price: "0.95", change: "+1.20%" },
+    { pair: "ARDRBTC", name: "Ardor / Bitcoin", price: "0.000003", change: "-0.30%" },
+    { pair: "ARDRUSDT", name: "Ardor / USDT", price: "0.20", change: "-0.10%" },
+    { pair: "ARKUSDT", name: "Ark / USDT", price: "0.75", change: "+0.50%" },
+    { pair: "ARKETH", name: "Ark / Ethereum", price: "0.00020", change: "+0.30%" },
+    { pair: "ARKBTC", name: "Ark / Bitcoin", price: "0.000012", change: "+0.10%" },
+    { pair: "ARKMUSDT", name: "Arkham / USDT", price: "2.10", change: "+1.80%" },
+    { pair: "ARKMBTC", name: "Arkham / Bitcoin", price: "0.00003", change: "+1.50%" },
+    { pair: "ARPABTC", name: "ARPA Token / Bitcoin", price: "0.000001", change: "-0.40%" },
+    { pair: "ARPAUSDT", name: "ARPA Token / USDT", price: "0.05", change: "-0.10%" },
+    { pair: "ARPAETH", name: "ARPA Token / Ethereum", price: "0.000015", change: "-0.30%" },
+    { pair: "ARUSDT", name: "Arweave / USDT", price: "7.00", change: "+1.00%" },
+    { pair: "ARBTC", name: "Arweave / Bitcoin", price: "0.00010", change: "+0.60%" },
+    { pair: "ASRBTC", name: "AS Roma / Bitcoin", price: "0.000005", change: "-0.90%" },
+    { pair: "ASRUSDT", name: "AS Roma / USDT", price: "3.50", change: "-0.50%" },
+    { pair: "ASTRUSDT", name: "Astar / USDT", price: "0.10", change: "+0.30%" },
+    { pair: "ASTRBTC", name: "Astar / Bitcoin", price: "0.0000015", change: "+0.10%" },
+    { pair: "ATMBTC", name: "Atletico de Madrid / Bitcoin", price: "0.000006", change: "+0.40%" },
+    { pair: "ATMUSDT", name: "Atletico de Madrid / USDT", price: "4.00", change: "+0.80%" },
+    { pair: "AUDIOBTC", name: "Audius / Bitcoin", price: "0.000004", change: "-0.70%" },
+    { pair: "AUDIOUSDT", name: "Audius / USDT", price: "0.30", change: "-0.30%" },
+    { pair: "AUDUSDT", name: "Australian Dollar / USDT", price: "0.66", change: "+0.15%" },
+    { pair: "ATABTC", name: "Automata / Bitcoin", price: "0.000002", change: "+0.90%" },
+    { pair: "ATAUSDT", name: "Automata / USDT", price: "0.15", change: "+1.50%" },
+    { pair: "AUTOUSDT", name: "AUTOv2 / USDT", price: "12.00", change: "-0.50%" },
+    { pair: "AUTOBTC", name: "AUTOv2 / Bitcoin", price: "0.00020", change: "-0.10%" },
+    { pair: "AVAXBRL", name: "Avalanche / BRL", price: "195.00", change: "+3.50%" },
+    { pair: "AVAXBTC", name: "Avalanche / Bitcoin", price: "0.00210", change: "+3.80%" },
+    { pair: "AVAXETH", name: "Avalanche / Ethereum", price: "0.0380", change: "+3.20%" },
+    { pair: "AVAXGBP", name: "Avalanche / GBP", price: "105.00", change: "+4.00%" },
+    { pair: "AVAXEUR", name: "Avalanche / EUR", price: "125.00", change: "+3.70%" },
+    { pair: "AVAXUSDT", name: "Avalanche / USDT", price: "134.20", change: "+4.20%" },
+    { pair: "AXSUSDT", name: "Axie Infinity Shard / USDT", price: "6.50", change: "-1.80%" },
+    { pair: "AXSBRL", name: "Axie Infinity Shard / BRL", price: "32.00", change: "-2.00%" },
+    { pair: "AXSBTC", name: "Axie Infinity Shard / Bitcoin", price: "0.00010", change: "-1.50%" },
+    { pair: "AXSETH", name: "Axie Infinity Shard / Ethereum", price: "0.00180", change: "-1.60%" },
+    { pair: "BADGERUSDT", name: "Badger / USDT", price: "3.50", change: "+0.50%" },
+    { pair: "BADGERBTC", name: "Badger / Bitcoin", price: "0.00005", change: "+0.10%" },
+    { pair: "BAKEUSDT", name: "BakeryToken / USDT", price: "0.25", change: "+0.90%" },
+    { pair: "BAKEBTC", name: "BakeryToken / Bitcoin", price: "0.000003", change: "+0.50%" },
+    { pair: "BALBTC", name: "Balancer / Bitcoin", price: "0.00009", change: "-0.80%" },
+    { pair: "BALUSDT", name: "Balancer / USDT", price: "5.80", change: "-0.40%" },
+    { pair: "BNTUSDT", name: "Bancor / USDT", price: "0.70", change: "+0.60%" },
+    { pair: "BNTETH", name: "Bancor / Ethereum", price: "0.00020", change: "+0.30%" },
+    { pair: "BNTBTC", name: "Bancor / Bitcoin", price: "0.00001", change: "+0.20%" },
+    { pair: "BANDUSDT", name: "BandToken / USDT", price: "1.20", change: "+1.10%" },
+    { pair: "BANDBTC", name: "BandToken / Bitcoin", price: "0.00002", change: "+0.70%" },
+    { pair: "BONDBTC", name: "BarnBridge Governance Token / BTC", price: "0.00007", change: "-0.50%" },
+    { pair: "BONDUSDT", name: "BarnBridge Governance Token / USDT", price: "4.50", change: "-0.10%" },
+    { pair: "BATBTC", name: "Basic Attention Token / Bitcoin", price: "0.000004", change: "+0.20%" },
+    { pair: "BATETH", name: "Basic Attention Token / Ethereum", price: "0.00008", change: "+0.05%" },
+    { pair: "BATUSDT", name: "Basic Attention Token / USDT", price: "0.25", change: "+0.40%" },
+    { pair: "BEAMXUSDT", name: "Beam / USDT", price: "0.02", change: "+1.50%" },
+    { pair: "BELUSDT", name: "Bella / USDT", price: "0.60", change: "-0.30%" },
+    { pair: "BELETH", name: "Bella / Ethereum", price: "0.00015", change: "-0.10%" },
+    { pair: "BELBTC", name: "Bella / Bitcoin", price: "0.000009", change: "-0.20%" },
+    { pair: "QIBTC", name: "BENQI / Bitcoin", price: "0.0000008", change: "+1.80%" },
+    { pair: "QIUSDT", name: "BENQI / USDT", price: "0.05", change: "+2.50%" },
+    { pair: "BETAUSDT", name: "Beta Token / USDT", price: "0.10", change: "-0.60%" },
+    { pair: "BETAETH", name: "Beta Token / Ethereum", price: "0.000025", change: "-0.40%" },
+    { pair: "BETABTC", name: "Beta Token / Bitcoin", price: "0.0000015", change: "-0.30%" },
+    { pair: "BICOBTC", name: "Biconomy Token / Bitcoin", price: "0.000007", change: "+0.90%" },
+    { pair: "BICOUSDT", name: "Biconomy Token / USDT", price: "0.45", change: "+1.40%" },
+    { pair: "BNBETH", name: "Binance Coin / Ethereum", price: "0.1600", change: "-0.50%" },
+    { pair: "BNBEUR", name: "Binance Coin / EUR", price: "550.00", change: "-0.90%" },
+    { pair: "BNBBTC", name: "Binance Coin / Bitcoin", price: "0.00910", change: "-0.30%" },
+    { pair: "BNBUSDT", name: "Binance Coin / USDT", price: "586.00", change: "-0.80%" },
+    { pair: "BNBGBP", name: "Binance Coin / GBP", price: "480.00", change: "-1.10%" },
+    { pair: "BNBBRL", name: "Binance Coin / BRL", price: "2900.0", change: "-0.60%" },
+    { pair: "BETHUSDT", name: "Binance ETH staking / USDT", price: "3510.0", change: "+1.20%" },
+    { pair: "BETHETH", name: "Binance ETH staking / ETH", price: "1.0000", change: "0.00%" },
+    { pair: "BUSDUSDT", name: "Binance USD / USDT", price: "1.00", change: "0.00%" },
+    { pair: "BUSDBRL", name: "Binance USD / BRL", price: "5.00", change: "0.00%" },
+    { pair: "BNXUSDT", name: "BinaryX / USDT", price: "65.00", change: "+0.40%" },
+    { pair: "BNXBTC", name: "BinaryX / Bitcoin", price: "0.00100", change: "+0.10%" },
+    { pair: "BSWUSDT", name: "Biswap / USDT", price: "0.08", change: "-0.30%" },
+    { pair: "BTCBRL", name: "Bitcoin / BRL", price: "320000", change: "+0.40%" },
+    { pair: "BTCUSDT", name: "Bitcoin / USDT", price: "64150.00", change: "+0.50%" },
+    { pair: "BTCGBP", name: "Bitcoin / GBP", price: "51000.00", change: "+0.30%" },
+    { pair: "BTCEUR", name: "Bitcoin / EUR", price: "60000.00", change: "+0.45%" },
+    { pair: "BCHBTC", name: "Bitcoin Cash / Bitcoin", price: "0.00700", change: "-1.50%" },
+    { pair: "BCHEUR", name: "Bitcoin Cash / EUR", price: "400.00", change: "-1.80%" },
+    { pair: "BCHUSDT", name: "Bitcoin Cash / USDT", price: "420.00", change: "-1.20%" },
+    { pair: "BTSUSDT", name: "BitShares / USDT", price: "0.005", change: "+0.10%" },
+    { pair: "BTTCUSDT", name: "BitTorrent / USDT", price: "0.000001", change: "+0.05%" },
+    { pair: "BLZBTC", name: "Bluzelle / Bitcoin", price: "0.000003", change: "+0.70%" },
+    { pair: "BLZUSDT", name: "Bluzelle / USDT", price: "0.20", change: "+1.30%" },
+    { pair: "FIDAUSDT", name: "Bonfida / USDT", price: "0.35", change: "-0.50%" },
+    { pair: "FIDABTC", name: "Bonfida / Bitcoin", price: "0.000005", change: "-0.10%" },
+    { pair: "AUCTIONUSDT", name: "Bounce Token [NEW] / USDT", price: "15.00", change: "+0.80%" },
+    { pair: "AUCTIONBTC", name: "Bounce Token [NEW] / Bitcoin", price: "0.00025", change: "+0.40%" },
+    { pair: "BURGERUSDT", name: "Burger Swap / USDT", price: "0.50", change: "-0.20%" },
+    { pair: "ADAUSDT", name: "Cardano / USDT", price: "0.45", change: "-2.10%" },
+    { pair: "ADABRL", name: "Cardano / BRL", price: "2.25", change: "-2.00%" },
+    { pair: "ADAEUR", name: "Cardano / EUR", price: "0.42", change: "-2.30%" },
+    { pair: "ADAGBP", name: "Cardano / GBP", price: "0.36", change: "-2.50%" },
+    { pair: "ADABTC", name: "Cardano / Bitcoin", price: "0.000007", change: "-1.80%" },
+    { pair: "ADAETH", name: "Cardano / Ethereum", price: "0.00012", change: "-1.90%" },
+    { pair: "CTSIUSDT", name: "Cartesi Token / USDT", price: "0.18", change: "+0.70%" },
+    { pair: "CTSIBTC", name: "Cartesi Token / Bitcoin", price: "0.000002", change: "+0.40%" },
+    { pair: "CELRUSDT", name: "CelerToken / USDT", price: "0.02", change: "-0.50%" },
+    { pair: "CELRBTC", name: "CelerToken / Bitcoin", price: "0.0000003", change: "-0.20%" },
+    { pair: "CELOBTC", name: "Celo / Bitcoin", price: "0.000015", change: "+1.20%" },
+    { pair: "CELOUSDT", name: "Celo / USDT", price: "0.90", change: "+1.80%" },
+    { pair: "CTKUSDT", name: "CertiK / USDT", price: "0.80", change: "-0.90%" },
+    { pair: "CTKBTC", name: "CertiK / Bitcoin", price: "0.000012", change: "-0.60%" },
+    { pair: "LINKGBP", name: "ChainLink Token / GBP", price: "11.50", change: "-2.00%" },
+    { pair: "LINKEUR", name: "ChainLink Token / EUR", price: "13.50", change: "-1.90%" },
+    { pair: "LINKBRL", name: "ChainLink Token / BRL", price: "70.00", change: "-1.70%" },
+    { pair: "LINKETH", name: "ChainLink Token / Ethereum", price: "0.00410", change: "-1.60%" },
+    { pair: "LINKUSDT", name: "ChainLink Token / USDT", price: "14.50", change: "-1.80%" },
+    { pair: "LINKBTC", name: "ChainLink Token / Bitcoin", price: "0.00022", change: "-1.50%" },
+    { pair: "CHESSUSDT", name: "Chess / USDT", price: "0.15", change: "+0.80%" },
+    { pair: "CHESSBTC", name: "Chess / Bitcoin", price: "0.000002", change: "+0.40%" },
+    { pair: "CHRBTC", name: "Chroma (Chromia) / Bitcoin", price: "0.000003", change: "+1.50%" },
+    { pair: "CHRUSDT", name: "Chroma (Chromia) / USDT", price: "0.20", change: "+2.10%" },
+    { pair: "CHRETH", name: "Chroma (Chromia) / Ethereum", price: "0.00005", change: "+1.80%" },
+    { pair: "CVCUSDT", name: "Civic / USDT", price: "0.10", change: "-0.20%" },
+    { pair: "CLVBTC", name: "Clover / Bitcoin", price: "0.000003", change: "-0.50%" },
+    { pair: "CLVUSDT", name: "Clover / USDT", price: "0.20", change: "-0.10%" },
+    { pair: "COCOSUSDT", name: "CocosToken / USDT", price: "0.60", change: "+0.30%" },
+    { pair: "C98BTC", name: "Coin98 / Bitcoin", price: "0.000006", change: "-0.70%" },
+    { pair: "C98USDT", name: "Coin98 / USDT", price: "0.40", change: "-0.20%" },
+    { pair: "COMBOUSDT", name: "COMBO / USDT", price: "0.90", change: "+1.40%" },
+    { pair: "COMPUSDT", name: "Compound / USDT", price: "60.00", change: "+0.80%" },
+    { pair: "COMPBTC", name: "Compound / Bitcoin", price: "0.00095", change: "+0.50%" },
+    { pair: "CVPUSDT", name: "Concentrated Voting Power / USDT", price: "0.40", change: "-0.30%" },
+    { pair: "CFXUSDT", name: "Conflux / USDT", price: "0.25", change: "+2.50%" },
+    { pair: "CFXBTC", name: "Conflux / Bitcoin", price: "0.000004", change: "+2.10%" },
+    { pair: "PEOPLEBTC", name: "ConstitutionDAO / Bitcoin", price: "0.0000004", change: "-1.20%" },
+    { pair: "PEOPLEUSDT", name: "ConstitutionDAO / USDT", price: "0.025", change: "-0.80%" },
+    { pair: "PEOPLEETH", name: "ConstitutionDAO / Ethereum", price: "0.000007", change: "-1.00%" },
+    { pair: "COSUSDT", name: "Contentos / USDT", price: "0.008", change: "+0.50%" },
+    { pair: "COSBTC", name: "Contentos / Bitcoin", price: "0.0000001", change: "+0.20%" },
+    { pair: "CVXUSDT", name: "Convex Token / USDT", price: "3.00", change: "+1.00%" },
+    { pair: "CVXBTC", name: "Convex Token / Bitcoin", price: "0.00005", change: "+0.60%" },
+    { pair: "CTXCUSDT", name: "Cortex / USDT", price: "0.20", change: "-0.40%" },
+    { pair: "CTXCBTC", name: "Cortex / Bitcoin", price: "0.000003", change: "-0.10%" },
+    { pair: "ATOMBTC", name: "Cosmos Atom / Bitcoin", price: "0.00018", change: "+0.90%" },
+    { pair: "ATOMUSDT", name: "Cosmos Atom / USDT", price: "11.50", change: "+1.50%" },
+    { pair: "ATOMBRL", name: "Cosmos Atom / BRL", price: "57.00", change: "+1.30%" },
+    { pair: "ATOMETH", name: "Cosmos Atom / Ethereum", price: "0.00330", change: "+1.10%" },
+    { pair: "ATOMEUR", name: "Cosmos Atom / EUR", price: "10.80", change: "+1.40%" },
+    { pair: "COTIUSDT", name: "COTI / USDT", price: "0.10", change: "-0.20%" },
+    { pair: "COTIBTC", name: "COTI / Bitcoin", price: "0.0000015", change: "-0.05%" },
+    { pair: "CREAMUSDT", name: "Cream / USDT", price: "20.00", change: "+0.70%" },
+    { pair: "CRVBTC", name: "Curve DAO Token / Bitcoin", price: "0.000007", change: "-0.50%" },
+    { pair: "CRVETH", name: "Curve DAO Token / Ethereum", price: "0.00013", change: "-0.30%" },
+    { pair: "CRVUSDT", name: "Curve DAO Token / USDT", price: "0.45", change: "-0.10%" },
+    { pair: "CYBERBTC", name: "CyberConnect / Bitcoin", price: "0.00015", change: "+3.00%" },
+    { pair: "CYBERETH", name: "CyberConnect / Ethereum", price: "0.00280", change: "+2.50%" },
+    { pair: "CYBERUSDT", name: "CyberConnect / USDT", price: "9.50", change: "+3.50%" },
+    { pair: "DARBTC", name: "Dalarnia / Bitcoin", price: "0.000001", change: "-0.90%" },
+    { pair: "DARUSDT", name: "Dalarnia / USDT", price: "0.06", change: "-0.50%" },
+    { pair: "DAREUR", name: "Dalarnia / EUR", price: "0.05", change: "-0.70%" },
+    { pair: "DASHUSDT", name: "Dash / USDT", price: "30.00", change: "+0.80%" },
+    { pair: "DASHETH", name: "Dash / Ethereum", price: "0.00850", change: "+0.50%" },
+    { pair: "DASHBTC", name: "Dash / Bitcoin", price: "0.00045", change: "+0.40%" },
+    { pair: "MANABTC", name: "Decentraland / Bitcoin", price: "0.000008", change: "+1.50%" },
+    { pair: "MANAETH", name: "Decentraland / Ethereum", price: "0.00015", change: "+1.20%" },
+    { pair: "MANAUSDT", name: "Decentraland / USDT", price: "0.50", change: "+2.00%" },
+    { pair: "MANABRL", name: "Decentraland / BRL", price: "2.50", change: "+1.80%" },
+    { pair: "DCRBTC", name: "Decred / Bitcoin", price: "0.00040", change: "-0.70%" },
+    { pair: "DCRUSDT", name: "Decred / USDT", price: "25.00", change: "-0.30%" },
+    { pair: "DENTETH", name: "Dent / Ethereum", price: "0.0000003", change: "+0.50%" },
+    { pair: "DENTUSDT", name: "Dent / USDT", price: "0.001", change: "+0.80%" },
+    { pair: "DEXEETH", name: "Dexe / Ethereum", price: "0.00080", change: "-0.40%" },
+    { pair: "DEXEUSDT", name: "Dexe / USDT", price: "4.50", change: "-0.10%" },
+    { pair: "YFIIUSDT", name: "DFI.money [YFII.finance] / USDT", price: "500.00", change: "+1.20%" },
+    { pair: "DIAUSDT", name: "DIA Token / USDT", price: "0.50", change: "-0.60%" },
+    { pair: "DIABTC", name: "DIA Token / Bitcoin", price: "0.000008", change: "-0.30%" },
+    { pair: "DGBUSDT", name: "DigiByte / USDT", price: "0.008", change: "+0.90%" },
+    { pair: "DGBBTC", name: "DigiByte / Bitcoin", price: "0.0000001", change: "+0.60%" },
+    { pair: "DOCKBTC", name: "Dock / Bitcoin", price: "0.0000005", change: "-0.20%" },
+    { pair: "DOCKUSDT", name: "Dock / USDT", price: "0.03", change: "+0.10%" },
+    { pair: "DODOBTC", name: "DODO bird / Bitcoin", price: "0.000003", change: "+1.50%" },
+    { pair: "DODOUSDT", name: "DODO bird / USDT", price: "0.20", change: "+2.10%" },
+    { pair: "DOGEBTC", name: "Dogecoin / Bitcoin", price: "0.0000019", change: "+1.50%" },
+    { pair: "DOGEGBP", name: "Dogecoin / GBP", price: "0.0950", change: "+1.10%" },
+    { pair: "DOGEEUR", name: "Dogecoin / EUR", price: "0.1150", change: "+1.30%" },
+    { pair: "DOGEUSDT", name: "Dogecoin / USDT", price: "0.1245", change: "+1.80%" },
+    { pair: "DOGEBRL", name: "Dogecoin / BRL", price: "0.6200", change: "+1.60%" },
+    { pair: "DREPUSDT", name: "DREP / USDT", price: "0.05", change: "-0.40%" },
+    { pair: "DREPBTC", name: "DREP / Bitcoin", price: "0.0000008", change: "-0.10%" },
+    { pair: "DUSKBTC", name: "Dusk Network / Bitcoin", price: "0.000008", change: "+0.70%" },
+    { pair: "DUSKUSDT", name: "Dusk Network / USDT", price: "0.50", change: "+1.30%" },
+    { pair: "EDUBTC", name: "EDU Coin [Open Campus] / BTC", price: "0.000009", change: "-0.50%" },
+    { pair: "EDUUSDT", name: "EDU Coin [Open Campus] / USDT", price: "0.60", change: "-0.10%" },
+    { pair: "EDUEUR", name: "EDU Coin [Open Campus] / EUR", price: "0.55", change: "-0.30%" },
+    { pair: "EPXUSDT", name: "Ellipsis X / USDT", price: "0.0001", change: "+0.20%" },
+    { pair: "ENJUSDT", name: "Enjin Coin / USDT", price: "0.35", change: "+1.00%" },
+    { pair: "ENJEUR", name: "Enjin Coin / EUR", price: "0.33", change: "+0.80%" },
+    { pair: "ENJETH", name: "Enjin Coin / Ethereum", price: "0.00010", change: "+0.70%" },
+    { pair: "ENJBRL", name: "Enjin Coin / BRL", price: "1.70", change: "+0.90%" },
+    { pair: "ENJBTC", name: "Enjin Coin / Bitcoin", price: "0.000005", change: "+0.60%" },
+    { pair: "MLNBTC", name: "Enzyme Finance / Bitcoin", price: "0.00020", change: "-0.80%" },
+    { pair: "MLNUSDT", name: "Enzyme Finance / USDT", price: "12.00", change: "-0.40%" },
+    { pair: "EOSEUR", name: "EOS / EUR", price: "0.75", change: "+0.60%" },
+    { pair: "EOSUSDT", name: "EOS / USDT", price: "0.80", change: "+0.90%" },
+    { pair: "EOSETH", name: "EOS / Ethereum", price: "0.00022", change: "+0.70%" },
+    { pair: "EOSBTC", name: "EOS / Bitcoin", price: "0.000013", change: "+0.50%" },
+    { pair: "ETHBTC", name: "Ethereum / Bitcoin", price: "0.05470", change: "+0.70%" },
+    { pair: "ETHEUR", name: "Ethereum / EUR", price: "3300.00", change: "+1.00%" },
+    { pair: "ETHUSDT", name: "Ethereum / USDT", price: "3510.50", change: "+1.20%" },
+    { pair: "ETHGBP", name: "Ethereum / GBP", price: "2800.00", change: "+1.10%" },
+    { pair: "ETHBRL", name: "Ethereum / BRL", price: "17500.0", change: "+0.90%" },
+    { pair: "ETCUSDT", name: "Ethereum Classic / USDT", price: "25.00", change: "-1.00%" },
+    { pair: "ETCETH", name: "Ethereum Classic / Ethereum", price: "0.00700", change: "-0.80%" },
+    { pair: "ETCBTC", name: "Ethereum Classic / Bitcoin", price: "0.00040", change: "-0.50%" },
+    { pair: "ETCEUR", name: "Ethereum Classic / EUR", price: "23.50", change: "-0.90%" },
+    { pair: "ENSUSDT", name: "Ethereum Name Service / USDT", price: "7.00", change: "+1.50%" },
+    { pair: "ENSBTC", name: "Ethereum Name Service / Bitcoin", price: "0.00011", change: "+1.10%" },
+    { pair: "IQUSDT", name: "Everipedia IQ / USDT", price: "0.004", change: "+0.30%" },
+    { pair: "FTMETH", name: "Fantom Token / Ethereum", price: "0.00015", change: "-0.80%" },
+    { pair: "FTMBRL", name: "Fantom Token / BRL", price: "1.20", change: "-1.00%" },
+    { pair: "FTMEUR", name: "Fantom Token / EUR", price: "0.22", change: "-0.90%" },
+    { pair: "FTMBTC", name: "Fantom Token / Bitcoin", price: "0.000004", change: "-0.50%" },
+    { pair: "FTMUSDT", name: "Fantom Token / USDT", price: "0.24", change: "-0.70%" },
+    { pair: "BARUSDT", name: "FC Barcelona / USDT", price: "3.50", change: "+0.60%" },
+    { pair: "BARBTC", name: "FC Barcelona / Bitcoin", price: "0.00005", change: "+0.20%" },
+    { pair: "LAZIOBTC", name: "FC Lazio Fan Token / Bitcoin", price: "0.000004", change: "-0.40%" },
+    { pair: "LAZIOUSDT", name: "FC Lazio Fan Token / USDT", price: "2.50", change: "-0.10%" },
+    { pair: "LAZIOEUR", name: "FC Lazio Fan Token / EUR", price: "2.30", change: "-0.20%" },
+    { pair: "PORTOBTC", name: "FC Porto Fan Token / Bitcoin", price: "0.000003", change: "+0.50%" },
+    { pair: "PORTOUSDT", name: "FC Porto Fan Token / USDT", price: "2.00", change: "+0.80%" },
+    { pair: "PORTOEUR", name: "FC Porto Fan Token / EUR", price: "1.85", change: "+0.60%" },
+    { pair: "SANTOSBTC", name: "FC Santos Fan Token / Bitcoin", price: "0.000004", change: "+1.20%" },
+    { pair: "SANTOSBRL", name: "FC Santos Fan Token / BRL", price: "2.50", change: "+1.50%" },
+    { pair: "SANTOSUSDT", name: "FC Santos Fan Token / USDT", price: "0.50", change: "+1.80%" },
+    { pair: "FETUSDT", name: "Fetch / USDT", price: "1.80", change: "-2.00%" },
+    { pair: "FETBTC", name: "Fetch / Bitcoin", price: "0.00003", change: "-1.50%" },
+    { pair: "FILETH", name: "Filecoin / Ethereum", price: "0.00150", change: "+0.40%" },
+    { pair: "FILUSDT", name: "Filecoin / USDT", price: "5.50", change: "+1.00%" },
+    { pair: "FILBTC", name: "Filecoin / Bitcoin", price: "0.00008", change: "+0.60%" },
+    { pair: "FIOBTC", name: "FIO Token / Bitcoin", price: "0.000001", change: "-0.30%" },
+    { pair: "FIOUSDT", name: "FIO Token / USDT", price: "0.05", change: "-0.10%" },
+    { pair: "FIROUSDT", name: "Firo / USDT", price: "1.50", change: "+0.70%" },
+    { pair: "FIROBTC", name: "Firo / Bitcoin", price: "0.00002", change: "+0.30%" },
+    { pair: "FLMBTC", name: "Flamingo / Bitcoin", price: "0.000001", change: "-0.50%" },
+    { pair: "FLMUSDT", name: "Flamingo / USDT", price: "0.10", change: "-0.10%" },
+    { pair: "FLOKIUSDT", name: "FLOKI / USDT", price: "0.00003", change: "+3.50%" },
+    { pair: "FLOWBTC", name: "Flow / Bitcoin", price: "0.000008", change: "+0.80%" },
+    { pair: "FLOWUSDT", name: "Flow / USDT", price: "0.50", change: "+1.40%" },
+    { pair: "FLUXBTC", name: "FLUX / Bitcoin", price: "0.00002", change: "-0.60%" },
+    { pair: "FLUXUSDT", name: "FLUX / USDT", price: "1.20", change: "-0.20%" },
+    { pair: "FXSBTC", name: "Frax Share / Bitcoin", price: "0.00040", change: "+1.50%" },
+    { pair: "FXSUSDT", name: "Frax Share / USDT", price: "25.00", change: "+2.10%" },
+    { pair: "FRONTETH", name: "Frontier Token / Ethereum", price: "0.00005", change: "-0.90%" },
+    { pair: "FRONTBTC", name: "Frontier Token / Bitcoin", price: "0.000002", change: "-0.50%" },
+    { pair: "FRONTUSDT", name: "Frontier Token / USDT", price: "0.15", change: "-0.10%" },
+    { pair: "FTTUSDT", name: "FTX Token / USDT", price: "1.50", change: "+5.00%" },
+    { pair: "FUNETH", name: "FunFair / Ethereum", price: "0.000001", change: "+0.30%" },
+    { pair: "FUNUSDT", name: "FunFair / USDT", price: "0.005", change: "+0.70%" },
+    { pair: "GNSBTC", name: "Gains Network / Bitcoin", price: "0.00004", change: "-0.80%" },
+    { pair: "GNSUSDT", name: "Gains Network / USDT", price: "2.50", change: "-0.40%" },
+    { pair: "GALABRL", name: "Gala / BRL", price: "0.15", change: "+1.50%" },
+    { pair: "GALAUSDT", name: "Gala / USDT", price: "0.03", change: "+2.10%" },
+    { pair: "GALABTC", name: "Gala / Bitcoin", price: "0.0000005", change: "+1.70%" },
+    { pair: "GALAETH", name: "Gala / Ethereum", price: "0.000008", change: "+1.90%" },
+    { pair: "GALAEUR", name: "Gala / EUR", price: "0.028", change: "+2.00%" },
+    { pair: "GFTUSDT", name: "Gifto / USDT", price: "0.05", change: "-0.30%" },
+    { pair: "GTCUSDT", name: "Gitcoin / USDT", price: "1.50", change: "+0.90%" },
+    { pair: "GTCBTC", name: "Gitcoin / Bitcoin", price: "0.00002", change: "+0.50%" },
+    { pair: "GALEUR", name: "Glaxe [Project Galaxy] / EUR", price: "1.50", change: "-0.40%" },
+    { pair: "GALBRL", name: "Glaxe [Project Galaxy] / BRL", price: "8.00", change: "-0.30%" },
+    { pair: "GALBTC", name: "Glaxe [Project Galaxy] / Bitcoin", price: "0.000025", change: "-0.10%" },
+    { pair: "GALETH", name: "Glaxe [Project Galaxy] / Ethereum", price: "0.00045", change: "-0.20%" },
+    { pair: "GALUSDT", name: "Glaxe [Project Galaxy] / USDT", price: "1.80", change: "0.00%" },
+    { pair: "GMTUSDT", name: "GMT [STEPN] / USDT", price: "0.20", change: "+1.50%" },
+    { pair: "GMTGBP", name: "GMT [STEPN] / GBP", price: "0.16", change: "+1.10%" },
+    { pair: "GMTBTC", name: "GMT [STEPN] / Bitcoin", price: "0.000003", change: "+1.20%" },
+    { pair: "GMTEUR", name: "GMT [STEPN] / EUR", price: "0.19", change: "+1.40%" },
+    { pair: "GMTETH", name: "GMT [STEPN] / Ethereum", price: "0.00005", change: "+1.30%" },
+    { pair: "GMTBRL", name: "GMT [STEPN] / BRL", price: "1.00", change: "+1.60%" },
+    { pair: "GMXUSDT", name: "GMX / USDT", price: "35.00", change: "-1.00%" },
+    { pair: "GMXBTC", name: "GMX / Bitcoin", price: "0.00055", change: "-0.70%" },
+    { pair: "GNOUSDT", name: "Gnosis / USDT", price: "200.00", change: "+0.50%" },
+    { pair: "GLMUSDT", name: "Golem Network Token / USDT", price: "0.25", change: "+0.90%" },
+    { pair: "GLMBTC", name: "Golem Network Token / Bitcoin", price: "0.000004", change: "+0.50%" },
+    { pair: "GRTUSDT", name: "Graph Token / USDT", price: "0.20", change: "+1.50%" },
+    { pair: "GRTETH", name: "Graph Token / Ethereum", price: "0.00006", change: "+1.20%" },
+    { pair: "GRTBTC", name: "Graph Token / Bitcoin", price: "0.000003", change: "+1.10%" },
+    { pair: "GRTEUR", name: "Graph Token / EUR", price: "0.18", change: "+1.30%" },
+    { pair: "HARDBTC", name: "Hard Protocol / Bitcoin", price: "0.000005", change: "-0.30%" },
+    { pair: "HARDUSDT", name: "Hard Protocol / USDT", price: "0.30", change: "-0.10%" },
+    { pair: "ONEUSDT", name: "Harmony / USDT", price: "0.01", change: "+0.20%" },
+    { pair: "ONEETH", name: "Harmony / Ethereum", price: "0.000002", change: "+0.05%" },
+    { pair: "ONEBTC", name: "Harmony / Bitcoin", price: "0.0000001", change: "-0.05%" },
+    { pair: "FARMBTC", name: "Harvest Finance FARM Reward Token / BTC", price: "0.00050", change: "+1.20%" },
+    { pair: "FARMUSDT", name: "Harvest Finance FARM Reward Token / USDT", price: "30.00", change: "+1.80%" },
+    { pair: "HFTUSDT", name: "Hashflow / USDT", price: "0.35", change: "-0.70%" },
+    { pair: "HFTBTC", name: "Hashflow / Bitcoin", price: "0.000005", change: "-0.30%" },
+    { pair: "HBARUSDT", name: "Hedera Hashgraph / USDT", price: "0.06", change: "+0.90%" },
+    { pair: "HBARBTC", name: "Hedera Hashgraph / Bitcoin", price: "0.000001", change: "+0.50%" },
+    { pair: "HIFIUSDT", name: "Hifi Finance / USDT", price: "0.50", change: "-1.50%" },
+    { pair: "HIFIETH", name: "Hifi Finance / Ethereum", price: "0.00015", change: "-1.20%" },
+    { pair: "HIGHUSDT", name: "Highstreet token / USDT", price: "1.20", change: "+0.60%" },
+    { pair: "HIGHBTC", name: "Highstreet token / Bitcoin", price: "0.00002", change: "+0.20%" },
+    { pair: "HIVEBTC", name: "Hive / Bitcoin", price: "0.000007", change: "+0.40%" },
+    { pair: "HIVEUSDT", name: "Hive / USDT", price: "0.45", change: "+1.00%" },
+    { pair: "HOTUSDT", name: "HoloToken / USDT", price: "0.002", change: "+0.50%" },
+    { pair: "HOTEUR", name: "HoloToken / EUR", price: "0.0018", change: "+0.30%" },
+    { pair: "HOTETH", name: "HoloToken / Ethereum", price: "0.0000005", change: "+0.10%" },
+    { pair: "HOOKBTC", name: "Hook Token / Bitcoin", price: "0.00002", change: "-0.80%" },
+    { pair: "HOOKUSDT", name: "Hook Token / USDT", price: "1.20", change: "-0.40%" },
+    { pair: "ZENUSDT", name: "Horizen / USDT", price: "7.00", change: "+0.90%" },
+    { pair: "ZENBTC", name: "Horizen / Bitcoin", price: "0.00011", change: "+0.50%" },
+    { pair: "ZENETH", name: "Horizen / Ethereum", price: "0.00200", change: "+0.70%" },
+    { pair: "ICXUSDT", name: "ICON / USDT", price: "0.25", change: "-0.20%" },
+    { pair: "ICXBTC", name: "ICON / Bitcoin", price: "0.000004", change: "+0.10%" },
+    { pair: "IDEXBTC", name: "IDEX Token / Bitcoin", price: "0.0000015", change: "+1.50%" },
+    { pair: "IDEXUSDT", name: "IDEX Token / USDT", price: "0.10", change: "+2.10%" },
+    { pair: "ILVUSDT", name: "Illuvium / USDT", price: "80.00", change: "+1.00%" },
+    { pair: "ILVBTC", name: "Illuvium / Bitcoin", price: "0.00125", change: "+0.60%" },
+    { pair: "IMXBTC", name: "Immutable X / Bitcoin", price: "0.00003", change: "-0.40%" },
+    { pair: "IMXUSDT", name: "Immutable X / USDT", price: "2.00", change: "-0.10%" },
+    { pair: "INJUSDT", name: "Injective Token / USDT", price: "28.00", change: "+3.50%" },
+    { pair: "INJETH", name: "Injective Token / Ethereum", price: "0.00800", change: "+3.00%" },
+    { pair: "INJBTC", name: "Injective Token / Bitcoin", price: "0.00045", change: "+3.20%" },
+    { pair: "ICPUSDT", name: "Internet Computer / USDT", price: "8.50", change: "+1.20%" },
+    { pair: "ICPEUR", name: "Internet Computer / EUR", price: "8.00", change: "+1.00%" },
+    { pair: "ICPETH", name: "Internet Computer / Ethereum", price: "0.00240", change: "+0.80%" },
+    { pair: "ICPBTC", name: "Internet Computer / Bitcoin", price: "0.00013", change: "+0.90%" },
+    { pair: "IOSTUSDT", name: "IOST / USDT", price: "0.008", change: "-0.50%" },
+    { pair: "IOSTETH", name: "IOST / Ethereum", price: "0.000002", change: "-0.30%" },
+    { pair: "IOSTBTC", name: "IOST / Bitcoin", price: "0.0000001", change: "-0.10%" },
+    { pair: "IOTAUSDT", name: "IOTA (MIOTA) / USDT", price: "0.20", change: "+0.60%" },
+    { pair: "IOTABTC", name: "IOTA (MIOTA) / Bitcoin", price: "0.000003", change: "+0.20%" },
+    { pair: "IOTAETH", name: "IOTA (MIOTA) / Ethereum", price: "0.00005", change: "+0.40%" },
+    { pair: "IOTXUSDT", name: "IoTeX Network / USDT", price: "0.04", change: "-0.10%" },
+    { pair: "IOTXETH", name: "IoTeX Network / Ethereum", price: "0.00001", change: "-0.05%" },
+    { pair: "IOTXBTC", name: "IoTeX Network / Bitcoin", price: "0.0000006", change: "-0.15%" },
+    { pair: "IRISUSDT", name: "IRISnet / USDT", price: "0.05", change: "+0.80%" },
+    { pair: "IRISBTC", name: "IRISnet / Bitcoin", price: "0.0000007", change: "+0.40%" },
+    { pair: "JASMYBTC", name: "JasmyCoin / Bitcoin", price: "0.0000003", change: "+1.50%" },
+    { pair: "JASMYUSDT", name: "JasmyCoin / USDT", price: "0.02", change: "+2.10%" },
+    { pair: "JASMYEUR", name: "JasmyCoin / EUR", price: "0.018", change: "+1.90%" },
+    { pair: "JASMYETH", name: "JasmyCoin / Ethereum", price: "0.000005", change: "+1.70%" },
+    { pair: "JOEUSDT", name: "JoeToken / USDT", price: "0.30", change: "-0.50%" },
+    { pair: "JOEBTC", name: "JoeToken / Bitcoin", price: "0.000005", change: "-0.10%" },
+    { pair: "JSTBTC", name: "JUST / Bitcoin", price: "0.0000005", change: "+0.60%" },
+    { pair: "JSTUSDT", name: "JUST / USDT", price: "0.03", change: "+1.20%" },
+    { pair: "JUVUSDT", name: "Juventus / USDT", price: "2.80", change: "-0.40%" },
+    { pair: "JUVBTC", name: "Juventus / Bitcoin", price: "0.00004", change: "-0.10%" },
+    { pair: "KDAUSDT", name: "Kadena / USDT", price: "0.60", change: "+0.90%" },
+    { pair: "KDABTC", name: "Kadena / Bitcoin", price: "0.000009", change: "+0.50%" },
+    { pair: "KAVABTC", name: "Kava BEP2 Token / Bitcoin", price: "0.00001", change: "-0.50%" },
+    { pair: "KAVAUSDT", name: "Kava BEP2 Token / USDT", price: "0.65", change: "-0.10%" },
+    { pair: "KAVAETH", name: "Kava BEP2 Token / Ethereum", price: "0.00018", change: "-0.30%" },
+    { pair: "KP3RUSDT", name: "Keep3rV1 / USDT", price: "60.00", change: "+1.00%" },
+    { pair: "KLAYUSDT", name: "Klaytn / USDT", price: "0.20", change: "-0.40%" },
+    { pair: "KLAYBTC", name: "Klaytn / Bitcoin", price: "0.000003", change: "-0.10%" },
+    { pair: "KMDBTC", name: "Komodo / Bitcoin", price: "0.00001", change: "+0.70%" },
+    { pair: "KMDUSDT", name: "Komodo / USDT", price: "0.60", change: "+1.30%" },
+    { pair: "KSMBTC", name: "Kusama / Bitcoin", price: "0.00040", change: "-0.80%" },
+    { pair: "KSMUSDT", name: "Kusama / USDT", price: "25.00", change: "-0.40%" },
+    { pair: "KNCUSDT", name: "Kyber Network Crystal v2 / USDT", price: "0.50", change: "+0.90%" },
+    { pair: "KNCETH", name: "Kyber Network Crystal v2 / Ethereum", price: "0.00015", change: "+0.60%" },
+    { pair: "KNCBTC", name: "Kyber Network Crystal v2 / Bitcoin", price: "0.000008", change: "+0.50%" },
+    { pair: "LOKABTC", name: "League of Kingdoms Arena / Bitcoin", price: "0.000005", change: "-0.30%" },
+    { pair: "LOKAUSDT", name: "League of Kingdoms Arena / USDT", price: "0.30", change: "-0.10%" },
+    { pair: "LEVERUSDT", name: "LeverFi / USDT", price: "0.002", change: "+1.50%" },
+    { pair: "LDOUSDT", name: "Lido DAO Token / USDT", price: "2.50", change: "+1.00%" },
+    { pair: "LDOBTC", name: "Lido DAO Token / Bitcoin", price: "0.00004", change: "+0.60%" },
+    { pair: "LINAUSDT", name: "Linear Token / USDT", price: "0.01", change: "-0.40%" },
+    { pair: "LINABTC", name: "Linear Token / Bitcoin", price: "0.0000001", change: "-0.10%" },
+    { pair: "LSKBTC", name: "Lisk / Bitcoin", price: "0.00002", change: "+0.50%" },
+    { pair: "LSKUSDT", name: "Lisk / USDT", price: "1.20", change: "+1.10%" },
+    { pair: "LSKETH", name: "Lisk / Ethereum", price: "0.00035", change: "+0.80%" },
+    { pair: "LTCBRL", name: "Litecoin / BRL", price: "350.00", change: "+0.70%" },
+    { pair: "LTCUSDT", name: "Litecoin / USDT", price: "70.00", change: "+1.20%" },
+    { pair: "LTCGBP", name: "Litecoin / GBP", price: "55.00", change: "+1.00%" },
+    { pair: "LTCEUR", name: "Litecoin / EUR", price: "65.00", change: "+1.10%" },
+    { pair: "LTCBTC", name: "Litecoin / Bitcoin", price: "0.00110", change: "+0.80%" },
+    { pair: "LTCETH", name: "Litecoin / Ethereum", price: "0.02000", change: "+0.90%" },
+    { pair: "LITBTC", name: "Litentry / Bitcoin", price: "0.00001", change: "-0.50%" },
+    { pair: "LITUSDT", name: "Litentry / USDT", price: "0.60", change: "-0.10%" },
+    { pair: "LITETH", name: "Litentry / Ethereum", price: "0.00018", change: "-0.30%" },
+    { pair: "LPTBTC", name: "Livepeer Token / Bitcoin", price: "0.00020", change: "+0.90%" },
+    { pair: "LPTUSDT", name: "Livepeer Token / USDT", price: "12.00", change: "+1.50%" },
+    { pair: "LOOMETH", name: "Loom Network / Ethereum", price: "0.00002", change: "-0.40%" },
+    { pair: "LOOMBTC", name: "Loom Network / Bitcoin", price: "0.0000008", change: "-0.10%" },
+    { pair: "LOOMUSDT", name: "Loom Network / USDT", price: "0.05", change: "+0.20%" },
+    { pair: "LRCUSDT", name: "LoopringCoin V2 / USDT", price: "0.20", change: "+0.80%" },
+    { pair: "LRCBTC", name: "LoopringCoin V2 / Bitcoin", price: "0.000003", change: "+0.40%" },
+    { pair: "LRCETH", name: "LoopringCoin V2 / Ethereum", price: "0.00005", change: "+0.60%" },
+    { pair: "LQTYBTC", name: "LQTY / Bitcoin", price: "0.00003", change: "-0.50%" },
+    { pair: "LQTYUSDT", name: "LQTY / USDT", price: "2.00", change: "-0.10%" },
+    { pair: "LTOUSDT", name: "LTO Network Token / USDT", price: "0.15", change: "+0.70%" },
+    { pair: "LTOBTC", name: "LTO Network Token / Bitcoin", price: "0.000002", change: "+0.30%" },
+    { pair: "MAGICBTC", name: "MAGIC / Bitcoin", price: "0.000015", change: "+1.50%" },
+    { pair: "MAGICUSDT", name: "MAGIC / USDT", price: "1.00", change: "+2.10%" },
+    { pair: "MKRBTC", name: "Maker / Bitcoin", price: "0.00400", change: "-1.00%" },
+    { pair: "MKRUSDT", name: "Maker / USDT", price: "2500.0", change: "-0.60%" },
+    { pair: "CITYUSDT", name: "Manchester City Fan Token / USDT", price: "3.00", change: "+0.80%" },
+    { pair: "CITYBTC", name: "Manchester City Fan Token / Bitcoin", price: "0.00004", change: "+0.40%" },
+    { pair: "OMBTC", name: "MANTRA DAO / Bitcoin", price: "0.000001", change: "-0.50%" },
+    { pair: "OMUSDT", name: "MANTRA DAO / USDT", price: "0.05", change: "-0.10%" },
+    { pair: "PONDUSDT", name: "Marlin / USDT", price: "0.02", change: "+0.60%" },
+    { pair: "PONDBTC", name: "Marlin / Bitcoin", price: "0.0000003", change: "+0.20%" },
+    { pair: "MASKUSDT", name: "Mask Network / USDT", price: "3.50", change: "+0.90%" },
+    { pair: "MAVUSDT", name: "Maverick Token / USDT", price: "0.40", change: "+1.50%" },
+    { pair: "MAVBTC", name: "Maverick Token / Bitcoin", price: "0.000006", change: "+1.10%" },
+    { pair: "MDXBTC", name: "Mdex / Bitcoin", price: "0.000002", change: "-0.30%" },
+    { pair: "MDXUSDT", name: "Mdex / USDT", price: "0.15", change: "-0.10%" },
+    { pair: "MDTBTC", name: "Measurable Data Token / Bitcoin", price: "0.0000005", change: "+0.40%" },
+    { pair: "MDTUSDT", name: "Measurable Data Token / USDT", price: "0.03", change: "+1.00%" },
+    { pair: "MEMEUSDT", name: "Memecoin / USDT", price: "0.035", change: "+2.50%" },
+    { pair: "MCUSDT", name: "Merit Circle [OLD] / USDT", price: "0.40", change: "-0.80%" },
+    { pair: "MCBTC", name: "Merit Circle [OLD] / Bitcoin", price: "0.000006", change: "-0.40%" },
+    { pair: "MTLBTC", name: "Metal / Bitcoin", price: "0.000008", change: "+0.70%" },
+    { pair: "MTLUSDT", name: "Metal / USDT", price: "0.50", change: "+1.30%" },
+    { pair: "MTLETH", name: "Metal / Ethereum", price: "0.00015", change: "+1.00%" },
+    { pair: "MINAUSDT", name: "Mina / USDT", price: "0.70", change: "+0.90%" },
+    { pair: "MINABTC", name: "Mina / Bitcoin", price: "0.000011", change: "+0.50%" },
+    { pair: "MOBBTC", name: "MobileCoin / Bitcoin", price: "0.00002", change: "-0.50%" },
+    { pair: "MOBUSDT", name: "MobileCoin / USDT", price: "1.20", change: "-0.10%" },
+    { pair: "MBOXBTC", name: "Mobox / Bitcoin", price: "0.000008", change: "+0.60%" },
+    { pair: "MBOXUSDT", name: "Mobox / USDT", price: "0.50", change: "+1.20%" },
+    { pair: "XMRBTC", name: "Monero / Bitcoin", price: "0.00250", change: "+0.80%" },
+    { pair: "XMRETH", name: "Monero / Ethereum", price: "0.04500", change: "+0.60%" },
+    { pair: "XMRUSDT", name: "Monero / USDT", price: "160.00", change: "+1.10%" },
+    { pair: "GLMRBTC", name: "Moonbeam / Bitcoin", price: "0.000006", change: "-0.70%" },
+    { pair: "GLMRUSDT", name: "Moonbeam / USDT", price: "0.40", change: "-0.30%" },
+    { pair: "MOVRBTC", name: "MOONRIVER / Bitcoin", price: "0.00004", change: "+1.00%" },
+    { pair: "MOVRUSDT", name: "MOONRIVER / USDT", price: "2.50", change: "+1.60%" },
+    { pair: "MBLUSDT", name: "MovieBloc / USDT", price: "0.003", change: "-0.10%" },
+    { pair: "MULTIBTC", name: "Multichain / Bitcoin", price: "0.00005", change: "+0.40%" },
+    { pair: "MULTIUSDT", name: "Multichain / USDT", price: "3.00", change: "+1.00%" },
+    { pair: "EGLDUSDT", name: "MultiversX / USDT", price: "35.00", change: "+1.50%" },
+    { pair: "EGLDEUR", name: "MultiversX / EUR", price: "33.00", change: "+1.30%" },
+    { pair: "EGLDBTC", name: "MultiversX / Bitcoin", price: "0.00055", change: "+1.10%" },
+    { pair: "EGLDETH", name: "MultiversX / Ethereum", price: "0.01000", change: "+1.20%" },
+    { pair: "XNOUSDT", name: "NANO (XNO) / USDT", price: "0.70", change: "-0.50%" },
+    { pair: "XNOETH", name: "NANO (XNO) / Ethereum", price: "0.00020", change: "-0.30%" },
+    { pair: "XNOBTC", name: "NANO (XNO) / Bitcoin", price: "0.00001", change: "-0.10%" },
+    { pair: "NEARUSDT", name: "NEAR Protocol / USDT", price: "7.00", change: "+2.50%" },
+    { pair: "NEAREUR", name: "NEAR Protocol / EUR", price: "6.50", change: "+2.30%" },
+    { pair: "NEARBTC", name: "NEAR Protocol / Bitcoin", price: "0.00011", change: "+2.10%" },
+    { pair: "NEARETH", name: "NEAR Protocol / Ethereum", price: "0.00200", change: "+2.20%" },
+    { pair: "NEBLUSDT", name: "Neblio / USDT", price: "0.10", change: "-0.40%" },
+    { pair: "NEBLBTC", name: "Neblio / Bitcoin", price: "0.0000015", change: "-0.10%" },
+    { pair: "XEMUSDT", name: "NEM / USDT", price: "0.03", change: "+0.20%" },
+    { pair: "NEOUSDT", name: "NEO / USDT", price: "12.00", change: "+1.00%" },
+    { pair: "NEOBTC", name: "NEO / Bitcoin", price: "0.00019", change: "+0.60%" },
+    { pair: "NEOETH", name: "NEO / Ethereum", price: "0.00340", change: "+0.80%" },
+    { pair: "GASUSDT", name: "NEO Gas / USDT", price: "3.50", change: "-0.50%" },
+    { pair: "GASBTC", name: "NEO Gas / Bitcoin", price: "0.00005", change: "-0.10%" },
+    { pair: "CKBUSDT", name: "Nervos Common Knowledge Base / USDT", price: "0.005", change: "+1.20%" },
+    { pair: "NTRNUSDT", name: "NEUTRON / USDT", price: "0.60", change: "+1.50%" },
+    { pair: "NTRNBTC", name: "NEUTRON / Bitcoin", price: "0.000009", change: "+1.10%" },
+    { pair: "NEXOBTC", name: "Nexo / Bitcoin", price: "0.00004", change: "-0.80%" },
+    { pair: "NEXOUSDT", name: "Nexo / USDT", price: "2.50", change: "-0.40%" },
+    { pair: "NKNBTC", name: "NKN [Ethereum] / Bitcoin", price: "0.000002", change: "+0.70%" },
+    { pair: "NKNUSDT", name: "NKN [Ethereum] / USDT", price: "0.15", change: "+1.30%" },
+    { pair: "NULSUSDT", name: "Nuls / USDT", price: "0.30", change: "-0.50%" },
+    { pair: "NULSBTC", name: "Nuls / Bitcoin", price: "0.000005", change: "-0.10%" },
+    { pair: "NMRBTC", name: "Numeraire / Bitcoin", price: "0.00040", change: "+0.60%" },
+    { pair: "NMRUSDT", name: "Numeraire / USDT", price: "25.00", change: "+1.20%" },
+    { pair: "ROSEBTC", name: "Oasis Network / Bitcoin", price: "0.000001", change: "+0.90%" },
+    { pair: "ROSEETH", name: "Oasis Network / Ethereum", price: "0.00003", change: "+0.70%" },
+    { pair: "ROSEUSDT", name: "Oasis Network / USDT", price: "0.05", change: "+1.50%" },
+    { pair: "OCEANUSDT", name: "Ocean Protocol / USDT", price: "0.40", change: "-0.20%" },
+    { pair: "OCEANBTC", name: "Ocean Protocol / Bitcoin", price: "0.000006", change: "+0.10%" },
+    { pair: "OGUSDT", name: "OG Fan Token / USDT", price: "3.00", change: "+0.80%" },
+    { pair: "OGBTC", name: "OG Fan Token / Bitcoin", price: "0.00005", change: "+0.40%" },
+    { pair: "OMGUSDT", name: "OMG Network / USDT", price: "0.50", change: "-0.50%" },
+    { pair: "OMGETH", name: "OMG Network / Ethereum", price: "0.00015", change: "-0.30%" },
+    { pair: "OMGBTC", name: "OMG Network / Bitcoin", price: "0.000008", change: "-0.10%" },
+    { pair: "ONTETH", name: "Ontology / Ethereum", price: "0.00007", change: "+0.60%" },
+    { pair: "ONTBTC", name: "Ontology / Bitcoin", price: "0.000004", change: "+0.20%" },
+    { pair: "ONTUSDT", name: "Ontology / USDT", price: "0.25", change: "+0.80%" },
+    { pair: "ONGUSDT", name: "Ontology Gas / USDT", price: "0.30", change: "-0.30%" },
+    { pair: "ONGBTC", name: "Ontology Gas / Bitcoin", price: "0.000005", change: "-0.10%" },
+    { pair: "OOKIUSDT", name: "Ooki Token / USDT", price: "0.002", change: "+0.50%" },
+    { pair: "OAXUSDT", name: "OpenANX / USDT", price: "0.10", change: "-0.40%" },
+    { pair: "OAXBTC", name: "OpenANX / Bitcoin", price: "0.0000015", change: "-0.10%" },
+    { pair: "OPUSDT", name: "Optimism / USDT", price: "3.50", change: "+2.50%" },
+    { pair: "OPETH", name: "Optimism / Ethereum", price: "0.00100", change: "+2.10%" },
+    { pair: "OPBTC", name: "Optimism / Bitcoin", price: "0.000055", change: "+2.20%" },
+    { pair: "OPEUR", name: "Optimism / EUR", price: "3.30", change: "+2.30%" },
+    { pair: "OXTUSDT", name: "Orchid / USDT", price: "0.08", change: "-0.60%" },
+    { pair: "OXTBTC", name: "Orchid / Bitcoin", price: "0.0000012", change: "-0.30%" },
+    { pair: "ORDIUSDT", name: "Ordinals / USDT", price: "55.00", change: "+3.00%" },
+    { pair: "ORDIBTC", name: "Ordinals / Bitcoin", price: "0.00085", change: "+2.50%" },
+    { pair: "OGNBTC", name: "Origin Token / Bitcoin", price: "0.000005", change: "+0.80%" },
+    { pair: "OGNUSDT", name: "Origin Token / USDT", price: "0.30", change: "+1.40%" },
+    { pair: "ORNBTC", name: "Orion Protocol / Bitcoin", price: "0.00002", change: "-0.50%" },
+    { pair: "ORNUSDT", name: "Orion Protocol / USDT", price: "1.20", change: "-0.10%" },
+    { pair: "OSMOUSDT", name: "Osmosis / USDT", price: "1.50", change: "+1.00%" },
+    { pair: "OSMOBTC", name: "Osmosis / Bitcoin", price: "0.000025", change: "+0.60%" },
+    { pair: "CAKEUSDT", name: "PancakeSwap Token / USDT", price: "2.00", change: "-0.40%" },
+    { pair: "CAKEBTC", name: "PancakeSwap Token / Bitcoin", price: "0.00003", change: "-0.10%" },
+    { pair: "PSGBTC", name: "Paris Saint-Germain / Bitcoin", price: "0.000005", change: "+0.70%" },
+    { pair: "PSGUSDT", name: "Paris Saint-Germain / USDT", price: "3.50", change: "+1.30%" },
+    { pair: "USDPUSDT", name: "Pax Dollar / USDT", price: "1.00", change: "0.00%" },
+    { pair: "PAXGUSD", name: "Paxos Gol", price: "2321.50", change: "-0.45%" },
   ],
   commodities: [
-    { pair: 'Gold', price: '$2,354.10', change: '+0.33%' },
-    { pair: 'Oil', price: '$78.44', change: '-0.82%' },
-    { pair: 'Silver', price: '$28.17', change: '+1.22%' },
-    { pair: 'Copper', price: '$4.50', change: '+0.78%' },
-    { pair: 'Nat Gas', price: '$2.85', change: '-1.50%' },
+    { pair: "Gold", name: "Safe-haven asset, jewelry, electronics", price: "$2,321.50", change: "-0.45%" },
+    { pair: "Crude Oil (WTI)", name: "US Benchmark (West Texas Intermediate)", price: "$81.55", change: "+0.90%" },
+    { pair: "Crude Oil (Brent)", name: "Global Benchmark (North Sea Oil)", price: "$85.10", change: "+0.85%" },
+    { pair: "Natural Gas", name: "Energy for heating and power generation", price: "$2.85", change: "-1.50%" },
+    { pair: "Silver", name: "Industrial use, jewelry, investment", price: "$29.50", change: "-0.8%" },
+    { pair: "Copper", name: "Construction, wiring, key for EV transition", price: "$4.45", change: "+0.5%" },
+    { pair: "Corn", name: "Animal feed, ethanol, human consumption", price: "$4.35/bu", change: "-0.2%" },
+    { pair: "Wheat", name: "Staple food crop", price: "$5.60/bu", change: "+0.8%" },
+    { pair: "Soybeans", name: "Oil and animal feed", price: "$11.60/bu", change: "-0.5%" },
+    { pair: "Coffee", name: "Arabica and Robusta beans", price: "$2.25/lb", change: "+1.2%" },
+    { pair: "Sugar", name: "Food and beverage production", price: "$0.19/lb", change: "-0.7%" },
+    { pair: "Platinum", price: "$980.00", change: "+1.5%" },
+    { pair: "Palladium", price: "$950.00", change: "-2.0%" },
+  ],
+  forex: [
+    // Original pairs
+    { pair: "EUR/USD", name: "Euro / US Dollar (Fiber)", price: "1.0715", change: "+0.20%" },
+    { pair: "USD/JPY", name: "US Dollar / Japanese Yen (Gopher)", price: "159.60", change: "-0.10%" },
+    { pair: "GBP/USD", name: "British Pound / US Dollar (Cable)", price: "1.2650", change: "+0.15%" },
+    { pair: "USD/CHF", name: "US Dollar / Swiss Franc (Swissie)", price: "0.8940", change: "-0.05%" },
+    { pair: "AUD/USD", name: "Australian Dollar / US Dollar (Aussie)", price: "0.6655", change: "+0.30%" },
+    { pair: "USD/CAD", name: "US Dollar / Canadian Dollar (Loonie)", price: "1.3680", change: "-0.25%" },
+    { pair: "NZD/USD", name: "New Zealand Dollar / US Dollar (Kiwi)", price: "0.6120", change: "+0.25%" },
+    { pair: "EUR/GBP", name: "Euro / British Pound", price: "0.8470", change: "+0.05%" },
+    { pair: "EUR/JPY", name: "Euro / Japanese Yen", price: "171.00", change: "+0.10%" },
+    { pair: "GBP/JPY", name: "British Pound / Japanese Yen", price: "201.90", change: "-0.05%" },
+    { pair: "AUD/JPY", name: "Australian Dollar / Japanese Yen", price: "106.15", change: "+0.20%" },
+    
+    // Previous AED, AUD, CAD, CHF, CNY Pairs
+    // ... (This section contains the pairs added in the previous turn) ...
+    { pair: "AEDAED", name: "United Arab Emirates Dirham / Australian Dollar", price: "0.4000", change: "+0.05%" },
+    // ... (many more)
+    { pair: "CNYCHF", name: "Chinese Yuan Renminbi / Swiss Franc", price: "0.1260", change: "-0.08%" },
+
+    // NEW DKK Pairs (Placeholder Data)
+    { pair: "DKKAUD", name: "Danish Krone / Australian Dollar", price: "0.2200", change: "+0.03%" },
+    { pair: "DKKBRL", name: "Danish Krone / Brazilian Real", price: "0.7500", change: "-0.15%" },
+    { pair: "DKKCAD", name: "Danish Krone / Canadian Dollar", price: "0.1900", change: "+0.08%" },
+    { pair: "DKKEUR", name: "Danish Krone / Euro", price: "0.1340", change: "-0.01%" }, // Near fixed
+    { pair: "DKKJPY", name: "Danish Krone / Japanese Yen", price: "23.50", change: "+0.05%" },
+    { pair: "DKKMXN", name: "Danish Krone / Mexican Nuevo Peso", price: "2.8000", change: "+0.09%" },
+    { pair: "DKKNZD", name: "Danish Krone / New Zealand Dollar", price: "0.2400", change: "+0.02%" },
+    { pair: "DKKGBP", name: "Danish Krone / Pound Sterling", price: "0.1100", change: "-0.04%" },
+    { pair: "DKKCHF", name: "Danish Krone / Swiss Franc", price: "0.1400", change: "-0.02%" },
+    { pair: "DKKUSD", name: "Danish Krone / United States Dollar", price: "0.1450", change: "+0.03%" },
+    
+    // NEW EUR Pairs (Placeholder Data)
+    { pair: "EURFIR", name: "Euro Main refinancing operations Interest rates", price: "4.25%", change: "0.00%" },
+    { pair: "EURRSD", name: "Euro / Serbian Dinar", price: "117.00", change: "+0.05%" },
+    { pair: "EURTRY", name: "Euro / Turkey New Lira", price: "35.500", change: "+0.45%" },
+    { pair: "EURAFN", name: "Euro / Afghanistan Afghani", price: "79.00", change: "+0.80%" },
+    { pair: "EURALL", name: "Euro / Albanian Lek", price: "103.00", change: "-0.10%" },
+    { pair: "EURDZD", name: "Euro / Algerian Dinar", price: "145.00", change: "+0.20%" },
+    { pair: "EURAOA", name: "Euro / Angolan Kwanza", price: "900.00", change: "+0.90%" },
+    { pair: "EURARS", name: "Euro / Argentine Peso", price: "1050.0", change: "-1.50%" },
+    { pair: "EURAMD", name: "Euro / Armenian Dram", price: "420.00", change: "+0.15%" },
+    { pair: "EURAUD", name: "Euro / Australian Dollar", price: "1.6000", change: "-0.30%" },
+    { pair: "EURAZN", name: "Euro / Azerbaijanian Manat", price: "1.8000", change: "+0.05%" },
+    { pair: "EURBSD", name: "Euro / Bahamian Dollar", price: "1.1000", change: "+0.10%" },
+    { pair: "EURBHD", name: "Euro / Bahraini Dinar", price: "0.4100", change: "+0.02%" },
+    { pair: "EURBDT", name: "Euro / Bangladeshi Taka", price: "125.00", change: "+0.25%" },
+    { pair: "EURBBD", name: "Euro / Barbados Dollar", price: "2.2000", change: "+0.05%" },
+    { pair: "EURBYN", name: "Euro / Belarusian ruble", price: "3.6000", change: "+0.30%" },
+    { pair: "EURBZD", name: "Euro / Belize Dollar", price: "2.2500", change: "+0.08%" },
+    { pair: "EURBMD", name: "Euro / Bermudian Dollar", price: "1.1000", change: "+0.10%" },
+    { pair: "EURBTN", name: "Euro / Bhutan Ngultrum", price: "91.00", change: "+0.15%" },
+    { pair: "EURBOB", name: "Euro / Bolivian Boliviano", price: "7.6000", change: "+0.05%" },
+    { pair: "EURBAM", name: "Euro / Bosnia/Herzegovina Convertible Marka", price: "1.9558", change: "0.00%" }, // Fixed peg
+    { pair: "EURBWP", name: "Euro / Botswana Pula", price: "15.000", change: "+0.12%" },
+    { pair: "EURBRL", name: "Euro / Brazilian Real", price: "5.5000", change: "+0.35%" },
+    { pair: "EURBND", name: "Euro / Brunei Dollarr", price: "1.5000", change: "-0.05%" },
+    { pair: "EURBGN", name: "Euro / Bulgarian Lev", price: "1.9558", change: "0.00%" }, // Fixed peg
+    { pair: "EURBIF", name: "Euro / Burundi Franc", price: "3100.0", change: "+0.85%" },
+    { pair: "EURKHR", name: "Euro / Cambodian Riel", price: "4500.0", change: "+0.20%" },
+    { pair: "EURCAD", name: "Euro / Canadian Dollar", price: "1.4900", change: "+0.15%" },
+    { pair: "EURCVE", name: "Euro / Cape Verde Escudo", price: "110.00", change: "0.00%" }, // Fixed peg
+    { pair: "EURXCG", name: "Euro / Caribbean Guilder", price: "2.0000", change: "+0.10%" },
+    { pair: "EURKYD", name: "Euro / Cayman Islands Dollar", price: "0.9000", change: "+0.08%" },
+    { pair: "EURXOF", name: "Euro / CFA Franc BCEAO", price: "655.96", change: "0.00%" }, // Fixed peg
+    { pair: "EURXAF", name: "Euro / CFA Franc BEAC", price: "655.96", change: "0.00%" }, // Fixed peg
+    { pair: "EURXPF", name: "Euro / CFP Franc", price: "119.33", change: "0.00%" }, // Fixed peg
+    { pair: "EURCLP", name: "Euro / Chilean Peso", price: "950.00", change: "-0.30%" },
+    { pair: "EURCNY", name: "Euro / Chinese Yuan Renminbi", price: "7.9000", change: "+0.02%" },
+    { pair: "EURCOP", name: "Euro / Colombian Peso", price: "4500.0", change: "+0.50%" },
+    { pair: "EURCDF", name: "Euro / Congolese Franc", price: "3000.0", change: "+0.80%" },
+    { pair: "EURCRC", name: "Euro / Costa Rican Colon", price: "600.00", change: "-0.10%" },
+    { pair: "EURCUP", name: "Euro / Cuban Peso", price: "26.000", change: "+0.15%" },
+    { pair: "EURCZK", name: "Euro / Czech Koruna", price: "24.500", change: "+0.10%" },
+    { pair: "EURDKK", name: "Euro / Danish Krone", price: "7.4500", change: "+0.01%" }, // Near fixed
+    { pair: "EURDJF", name: "Euro / Djibouti Franc", price: "195.00", change: "0.00%" },
+    { pair: "EURDOP", name: "Euro / Dominican Peso", price: "65.000", change: "+0.22%" },
+    { pair: "EUREGP", name: "Euro / Egyptian Pound", price: "52.000", change: "+0.55%" },
+    { pair: "EURSVC", name: "Euro / El Salvador Colon", price: "9.6000", change: "+0.10%" },
+    { pair: "EURETB", name: "Euro / Ethiopian Birr", price: "65.000", change: "+0.30%" },
+    { pair: "EURFJD", name: "Euro / Fiji Dollar", price: "2.4000", change: "-0.05%" },
+    { pair: "EURGMD", name: "Euro / Gambian Dalasi", price: "75.000", change: "+0.70%" },
+    { pair: "EURGEL", name: "Euro / Georgian Lari", price: "3.2000", change: "+0.15%" },
+    { pair: "EURGHS", name: "Euro / Ghana Cedi", price: "16.000", change: "+0.85%" },
+    { pair: "EURGTQ", name: "Euro / Guatemalan Quetzal", price: "8.5000", change: "+0.05%" },
+    { pair: "EURGNF", name: "Euro / Guinean Franc", price: "9700.0", change: "+0.60%" },
+    { pair: "EURGYD", name: "Euro / Guyana Dollar", price: "230.00", change: "+0.10%" },
+    { pair: "EURHTG", name: "Euro / Haitian Gourde", price: "150.00", change: "+0.35%" },
+    { pair: "EURHNL", name: "Euro / Honduran Lempira", price: "27.000", change: "+0.18%" },
+    { pair: "EURHKD", name: "Euro / Hong Hong Dollar", price: "9.1000", change: "+0.05%" },
+    { pair: "EURHUF", name: "Euro / Hungarian Forint", price: "395.00", change: "-0.20%" },
+    { pair: "EURISK", name: "Euro / Icelandic Krona", price: "150.00", change: "+0.10%" },
+    { pair: "EURINR", name: "Euro / Indian Rupee", price: "91.000", change: "+0.15%" },
+    { pair: "EURIDR", name: "Euro / Indonesian Rupiah", price: "18500", change: "-0.08%" },
+    { pair: "EURIQD", name: "Euro / Iraqi Dinar", price: "1450.0", change: "+0.05%" },
+    { pair: "EURILS", name: "Euro / Israeli New Shekel", price: "4.5000", change: "-0.10%" },
+    { pair: "EURJMD", name: "Euro / Jamaican Dollar", price: "170.00", change: "+0.20%" },
+    { pair: "EURJPY", name: "Euro / Japanese Yen", price: "171.00", change: "+0.10%" },
+    { pair: "EURJOD", name: "Euro / Jordanian Dinar", price: "0.7800", change: "+0.03%" },
+    { pair: "EURKZT", name: "Euro / Kazakh Tenge", price: "550.00", change: "+0.25%" },
+    { pair: "EURKES", name: "Euro / Kenyan Shilling", price: "155.00", change: "+0.30%" },
+    { pair: "EURKWD", name: "Euro / Kuwaiti Dinar", price: "0.3300", change: "+0.01%" },
+    { pair: "EURLAK", name: "Euro / Lao Kip", price: "23000", change: "+0.45%" },
+    { pair: "EURLBP", name: "Euro / Lebanese Pound", price: "97000", change: "+0.05%" },
+    { pair: "EURLSL", name: "Euro / Lesotho Loti", price: "20.500", change: "+0.40%" },
+    { pair: "EURLRD", name: "Euro / Liberian Dollar", price: "210.00", change: "+0.28%" },
+    { pair: "EURLYD", name: "Euro / Libyan Dinar", price: "5.4000", change: "+0.15%" },
+    { pair: "EURMOP", name: "Euro / Macao Pataca", price: "9.0000", change: "+0.05%" },
+    { pair: "EURMKD", name: "Euro / Macedonian Denar", price: "61.600", change: "0.00%" }, // Fixed peg
+    { pair: "EURMGA", name: "Euro / Malagasy Ariary", price: "5400.0", change: "+0.75%" },
+    { pair: "EURMWK", name: "Euro / Malawi Kwacha", price: "1900.0", change: "+0.50%" },
+    { pair: "EURMYR", name: "Euro / Malaysian Ringgit", price: "5.5000", change: "+0.10%" },
+    { pair: "EURMVR", name: "Euro / Maldivian Rufiyaa", price: "17.000", change: "+0.08%" },
+    { pair: "EURMRU", name: "Euro / Mauritanian Ouguiya", price: "390.00", change: "+0.40%" },
+    { pair: "EURMUR", name: "Euro / Mauritius Rupee", price: "51.000", change: "+0.15%" },
+    { pair: "EURMXN", name: "Euro / Mexican Nuevo Peso", price: "19.500", change: "+0.25%" },
+    { pair: "EURMDL", name: "Euro / Moldovan Leu", price: "20.000", change: "+0.12%" },
+    { pair: "EURMAD", name: "Euro / Moroccan Dirham", price: "11.000", change: "+0.05%" },
+    { pair: "EURMZN", name: "Euro / Mozambique Metical", price: "70.000", change: "+0.30%" },
+    { pair: "EURNAD", name: "Euro / Namibian Dollar", price: "20.500", change: "+0.40%" },
+    { pair: "EURNPR", name: "Euro / Nepalese Rupee", price: "145.00", change: "+0.15%" },
+    { pair: "EURNZD", name: "Euro / New Zealand Dollar", price: "1.7500", change: "-0.25%" },
+    { pair: "EURNIO", name: "Euro / Nicaraguan Cordoba Oro", price: "40.000", change: "+0.10%" },
+    { pair: "EURNGN", name: "Euro / Nigerian Naira", price: "1600.0", change: "+0.90%" },
+    { pair: "EURNOK", name: "Euro / Norwegian Krone", price: "11.800", change: "-0.15%" },
+    { pair: "EURCNH", name: "Euro / Offshore Renminbi", price: "7.9200", change: "+0.03%" },
+    { pair: "EUROMR", name: "Euro / Oman Rial", price: "0.4300", change: "+0.01%" },
+    { pair: "EURPKR", name: "Euro / Pakistani Rupee", price: "330.00", change: "+0.45%" },
+    { pair: "EURPAB", name: "Euro / Panamanian Balboa", price: "1.0700", change: "+0.20%" },
+    { pair: "EURPGK", name: "Euro / Papua New Guinea Kina", price: "4.0000", change: "+0.10%" },
+    { pair: "EURPYG", name: "Euro / Paraguayan Guarani", price: "8000.0", change: "+0.25%" },
+    { pair: "EURPEN", name: "Euro / Peruvian Nuevo Sol", price: "4.0000", change: "+0.08%" },
+    { pair: "EURPHP", name: "Euro / Philippine Peso", price: "62.000", change: "+0.20%" },
+    { pair: "EURPLN", name: "Euro / Polish Zloty", price: "4.3000", change: "-0.10%" },
+    { pair: "EURGBP", name: "Euro / Pound Sterling", price: "0.8470", change: "+0.05%" },
+    { pair: "EURQAR", name: "Euro / Qatari Rial", price: "3.9000", change: "+0.05%" },
+    { pair: "EURRON", name: "Euro / Romanian New Leu", price: "4.9700", change: "+0.01%" },
+    { pair: "EURRUB", name: "Euro / Russian Ruble", price: "98.000", change: "+0.30%" },
+    { pair: "EURRWF", name: "Euro / Rwandan Franc", price: "1400.0", change: "+0.55%" },
+    { pair: "EURSTN", name: "Euro / Sao Tomean Dobra", price: "24000", change: "+0.15%" },
+    { pair: "EURSAR", name: "Euro / Saudi Riyal", price: "4.0000", change: "+0.05%" },
+    { pair: "EURSCR", name: "Euro / Seychelles Rupee", price: "15.000", change: "+0.10%" },
+    { pair: "EURSGD", name: "Euro / Singapore Dollar", price: "1.4500", change: "+0.08%" },
+    { pair: "EURSOS", name: "Euro / Somali Shilling", price: "610.00", change: "+0.25%" },
+    { pair: "EURZAR", name: "Euro / South African Rand", price: "20.500", change: "+0.40%" },
+    { pair: "EURKRW", name: "Euro / South Korean Won", price: "1500.0", change: "+0.15%" },
+    { pair: "EURXDR", name: "Euro / Special Drawing Rights", price: "0.8000", change: "+0.02%" },
+    { pair: "EURLKR", name: "Euro / Sri Lanka Rupee", price: "350.00", change: "+0.35%" },
+    { pair: "EURSDG", name: "Euro / Sudanese Pound", price: "640.00", change: "+0.60%" },
+    { pair: "EURSRD", name: "Euro / Suriname Dollar", price: "35.000", change: "+0.22%" },
+    { pair: "EURSZL", name: "Euro / Swaziland Lilangeni", price: "20.500", change: "+0.40%" },
+    { pair: "EURSEK", name: "Euro / Swedish Krona", price: "11.600", change: "-0.10%" },
+    { pair: "EURCHF", name: "Euro / Swiss Franc", price: "0.9600", change: "-0.05%" },
+    { pair: "EURTWD", name: "Euro / Taiwan New Dollar", price: "35.000", change: "+0.18%" },
+    { pair: "EURTJS", name: "Euro / Tajik Somoni", price: "12.500", change: "+0.10%" },
+    { pair: "EURTZS", name: "Euro / Tanzanian Shilling", price: "2900.0", change: "+0.40%" },
+    { pair: "EURTHB", name: "Euro / Thai Baht", price: "39.500", change: "+0.12%" },
+    { pair: "EURTTD", name: "Euro / Trinidad and Tobago Dollar", price: "7.5000", change: "+0.08%" },
+    { pair: "EURTND", name: "Euro / Tunisian Dinar", price: "3.5000", change: "+0.15%" },
+    { pair: "EURUGX", name: "Euro / Uganda New Shilling", price: "4300.0", change: "+0.50%" },
+    { pair: "EURUAH", name: "Euro / Ukrainian Hryvnia", price: "45.000", change: "+0.25%" },
+    { pair: "EURAED", name: "Euro / United Arab Emirates Dirham", price: "4.0000", change: "+0.05%" },
+    { pair: "EURUSD", name: "Euro / United States Dollar", price: "1.0715", change: "+0.20%" },
+    { pair: "EURUYU", name: "Euro / Uruguayan Peso", price: "42.000", change: "+0.10%" },
+    { pair: "EURUZS", name: "Euro / Uzbekistani Sum", price: "13500", change: "+0.30%" },
+    { pair: "EURVES", name: "Euro / Venezuelan Bolivar Soberano", price: "39.000", change: "+0.50%" },
+    { pair: "EURVND", name: "Euro / Vietnamese Dong", price: "27500", change: "+0.20%" },
+    { pair: "EURYER", name: "Euro / Yemeni Rial", price: "270.00", change: "+0.05%" },
+    { pair: "EURZMW", name: "Euro / Zambian Kwacha", price: "30.000", change: "+0.70%" },
+    
+    // NEW GBP Pairs (Placeholder Data)
+    { pair: "GBPTRY", name: "Pound Sterling / Turkey New Lira", price: "41.800", change: "+0.55%" },
+    { pair: "GBPAFN", name: "Pound Sterling / Afghanistan Afghani", price: "93.00", change: "+0.90%" },
+    { pair: "GBPALL", name: "Pound Sterling / Albanian Lek", price: "121.00", change: "-0.05%" },
+    { pair: "GBPDZD", name: "Pound Sterling / Algerian Dinar", price: "170.00", change: "+0.30%" },
+    { pair: "GBPARS", name: "Pound Sterling / Argentine Peso", price: "1250.0", change: "-1.40%" },
+    { pair: "GBPAMD", name: "Pound Sterling / Armenian Dram", price: "495.00", change: "+0.20%" },
+    { pair: "GBPAWG", name: "Pound Sterling / Aruban Guilder", price: "2.2800", change: "+0.10%" },
+    { pair: "GBPAUD", name: "Pound Sterling / Australian Dollar", price: "1.9000", change: "-0.25%" },
+    { pair: "GBPBSD", name: "Pound Sterling / Bahamian Dollar", price: "1.2600", change: "+0.15%" },
+    { pair: "GBPBHD", name: "Pound Sterling / Bahraini Dinar", price: "0.4750", change: "+0.05%" },
+    { pair: "GBPBDT", name: "Pound Sterling / Bangladeshi Taka", price: "148.00", change: "+0.30%" },
+    { pair: "GBPBBD", name: "Pound Sterling / Barbados Dollar", price: "2.5200", change: "+0.08%" },
+    { pair: "GBPBYN", name: "Pound Sterling / Belarusian ruble", price: "4.3000", change: "+0.35%" },
+    { pair: "GBPBZD", name: "Pound Sterling / Belize Dollar", price: "2.5500", change: "+0.12%" },
+    { pair: "GBPBMD", name: "Pound Sterling / Bermudian Dollar", price: "1.2600", change: "+0.15%" },
+    { pair: "GBPBTN", name: "Pound Sterling / Bhutan Ngultrum", price: "107.00", change: "+0.20%" },
+    { pair: "GBPBOB", name: "Pound Sterling / Bolivian Boliviano", price: "9.5000", change: "+0.08%" },
+    { pair: "GBPBAM", name: "Pound Sterling / Bosnia/Herzegovina Convertible Marka", price: "2.3000", change: "+0.05%" },
+    { pair: "GBPBWP", name: "Pound Sterling / Botswana Pula", price: "18.000", change: "+0.18%" },
+    { pair: "GBPBRL", name: "Pound Sterling / Brazilian Real", price: "6.5000", change: "+0.45%" },
+    { pair: "GBPBND", name: "Pound Sterling / Brunei Dollarr", price: "1.7800", change: "0.00%" },
+    { pair: "GBPBGN", name: "Pound Sterling / Bulgarian Lev", price: "2.3000", change: "+0.05%" },
+    { pair: "GBPBIF", name: "Pound Sterling / Burundi Franc", price: "3650.0", change: "+0.95%" },
+    { pair: "GBPKHR", name: "Pound Sterling / Cambodian Riel", price: "5300.0", change: "+0.25%" },
+    { pair: "GBPCAD", name: "Pound Sterling / Canadian Dollar", price: "1.7200", change: "+0.20%" },
+    { pair: "GBPCVE", name: "Pound Sterling / Cape Verde Escudo", price: "130.00", change: "+0.05%" },
+    { pair: "GBPXCG", name: "Pound Sterling / Caribbean Guilder", price: "2.4500", change: "+0.15%" },
+    { pair: "GBPKYD", name: "Pound Sterling / Cayman Islands Dollar", price: "1.0500", change: "+0.12%" },
+    { pair: "GBPXOF", name: "Pound Sterling / CFA Franc BCEAO", price: "775.00", change: "+0.05%" },
+    { pair: "GBPXAF", name: "Pound Sterling / CFA Franc BEAC", price: "775.00", change: "+0.05%" },
+    { pair: "GBPXPF", name: "Pound Sterling / CFP Franc", price: "140.00", change: "+0.05%" },
+    { pair: "GBPCLP", name: "Pound Sterling / Chilean Peso", price: "1120.0", change: "-0.20%" },
+    { pair: "GBPCNY", name: "Pound Sterling / Chinese Yuan Renminbi", price: "9.0000", change: "+0.08%" },
+    { pair: "GBPCOP", name: "Pound Sterling / Colombian Peso", price: "5300.0", change: "+0.60%" },
+    { pair: "GBPKMF", name: "Pound Sterling / Comoros Franc", price: "580.00", change: "+0.08%" },
+    { pair: "GBPCDF", name: "Pound Sterling / Congolese Franc", price: "3550.0", change: "+0.90%" },
+    { pair: "GBPCRC", name: "Pound Sterling / Costa Rican Colon", price: "710.00", change: "-0.05%" },
+    { pair: "GBPCUP", name: "Pound Sterling / Cuban Peso", price: "31.000", change: "+0.20%" },
+    { pair: "GBPCZK", name: "Pound Sterling / Czech Koruna", price: "29.000", change: "+0.15%" },
+    { pair: "GBPDKK", name: "Pound Sterling / Danish Krone", price: "8.8000", change: "+0.05%" },
+    { pair: "GBPDJF", name: "Pound Sterling / Djibouti Franc", price: "230.00", change: "+0.05%" },
+    { pair: "GBPDOP", name: "Pound Sterling / Dominican Peso", price: "77.000", change: "+0.28%" },
+    { pair: "GBPEGP", name: "Pound Sterling / Egyptian Pound", price: "61.000", change: "+0.65%" },
+    { pair: "GBPSVC", name: "Pound Sterling / El Salvador Colon", price: "11.300", change: "+0.15%" },
+    { pair: "GBPETB", name: "Pound Sterling / Ethiopian Birr", price: "77.000", change: "+0.35%" },
+    { pair: "GBPEUR", name: "Pound Sterling / Euro", price: "1.1800", change: "-0.05%" },
+    { pair: "GBPFJD", name: "Pound Sterling / Fiji Dollar", price: "2.8500", change: "0.00%" },
+    { pair: "GBPGMD", name: "Pound Sterling / Gambian Dalasi", price: "88.000", change: "+0.80%" },
+    { pair: "GBPGEL", name: "Pound Sterling / Georgian Lari", price: "3.7500", change: "+0.20%" },
+    { pair: "GBPGHS", name: "Pound Sterling / Ghana Cedi", price: "19.000", change: "+1.00%" },
+    { pair: "GBPGTQ", name: "Pound Sterling / Guatemalan Quetzal", price: "10.000", change: "+0.10%" },
+    { pair: "GBPGNF", name: "Pound Sterling / Guinean Franc", price: "11500", change: "+0.70%" },
+    { pair: "GBPGYD", name: "Pound Sterling / Guyana Dollar", price: "270.00", change: "+0.15%" },
+    { pair: "GBPHTG", name: "Pound Sterling / Haitian Gourde", price: "180.00", change: "+0.40%" },
+    { pair: "GBPHNL", name: "Pound Sterling / Honduran Lempira", price: "32.000", change: "+0.22%" },
+    { pair: "GBPHKD", name: "Pound Sterling / Hong Hong Dollar", price: "9.8000", change: "+0.10%" },
+    { pair: "GBPHUF", name: "Pound Sterling / Hungarian Forint", price: "465.00", change: "-0.15%" },
+    { pair: "GBPISK", name: "Pound Sterling / Icelandic Krona", price: "177.00", change: "+0.15%" },
+    { pair: "GBPINR", name: "Pound Sterling / Indian Rupee", price: "107.00", change: "+0.20%" },
+    { pair: "GBPIDR", name: "Pound Sterling / Indonesian Rupiah", price: "21800", change: "-0.02%" },
+    { pair: "GBPIQD", name: "Pound Sterling / Iraqi Dinar", price: "1700.0", change: "+0.10%" },
+    { pair: "GBPILS", name: "Pound Sterling / Israeli New Shekel", price: "5.3000", change: "-0.05%" },
+    { pair: "GBPJMD", name: "Pound Sterling / Jamaican Dollar", price: "200.00", change: "+0.25%" },
+    { pair: "GBPJPY", name: "Pound Sterling / Japanese Yen", price: "201.90", change: "-0.05%" },
+    { pair: "GBPJOD", name: "Pound Sterling / Jordanian Dinar", price: "0.9300", change: "+0.08%" },
+    { pair: "GBPKZT", name: "Pound Sterling / Kazakh Tenge", price: "645.00", change: "+0.30%" },
+    { pair: "GBPKES", name: "Pound Sterling / Kenyan Shilling", price: "183.00", change: "+0.35%" },
+    { pair: "GBPKWD", name: "Pound Sterling / Kuwaiti Dinar", price: "0.3900", change: "+0.05%" },
+    { pair: "GBPLAK", name: "Pound Sterling / Lao Kip", price: "27000", change: "+0.50%" },
+    { pair: "GBPLBP", name: "Pound Sterling / Lebanese Pound", price: "115000", change: "+0.10%" },
+    { pair: "GBPLSL", name: "Pound Sterling / Lesotho Loti", price: "24.000", change: "+0.45%" },
+    { pair: "GBPLRD", name: "Pound Sterling / Liberian Dollar", price: "250.00", change: "+0.33%" },
+    { pair: "GBPLYD", name: "Pound Sterling / Libyan Dinar", price: "6.4000", change: "+0.20%" },
+    { pair: "GBPMOP", name: "Pound Sterling / Macao Pataca", price: "10.800", change: "+0.10%" },
+    { pair: "GBPMKD", name: "Pound Sterling / Macedonian Denar", price: "72.000", change: "+0.05%" },
+    { pair: "GBPMGA", name: "Pound Sterling / Malagasy Ariary", price: "6350.0", change: "+0.85%" },
+    { pair: "GBPMWK", name: "Pound Sterling / Malawi Kwacha", price: "2250.0", change: "+0.60%" },
+    { pair: "GBPMYR", name: "Pound Sterling / Malaysian Ringgit", price: "6.5000", change: "+0.15%" },
+    { pair: "GBPMVR", name: "Pound Sterling / Maldivian Rufiyaa", price: "20.000", change: "+0.12%" },
+    { pair: "GBPMUR", name: "Pound Sterling / Mauritius Rupee", price: "60.000", change: "+0.20%" },
+    { pair: "GBPMXN", name: "Pound Sterling / Mexican Nuevo Peso", price: "23.000", change: "+0.30%" },
+    { pair: "GBPMDL", name: "Pound Sterling / Moldovan Leu", price: "23.500", change: "+0.18%" },
+    { pair: "GBPMAD", name: "Pound Sterling / Moroccan Dirham", price: "13.000", change: "+0.10%" },
+    { pair: "GBPNPR", name: "Pound Sterling / Nepalese Rupee", price: "171.00", change: "+0.20%" },
+    { pair: "GBPNZD", name: "Pound Sterling / New Zealand Dollar", price: "2.0500", change: "-0.20%" },
+    { pair: "GBPNIO", name: "Pound Sterling / Nicaraguan Cordoba Oro", price: "47.000", change: "+0.15%" },
+    { pair: "GBPNGN", name: "Pound Sterling / Nigerian Naira", price: "1890.0", change: "+1.10%" },
+    { pair: "GBPNOK", name: "Pound Sterling / Norwegian Krone", price: "14.000", change: "-0.10%" },
+    { pair: "GBPCNH", name: "Pound Sterling / Offshore Renminbi", price: "9.0500", change: "+0.08%" },
+    { pair: "GBPOMR", name: "Pound Sterling / Oman Rial", price: "0.4900", change: "+0.05%" },
+    { pair: "GBPPKR", name: "Pound Sterling / Pakistani Rupee", price: "390.00", change: "+0.55%" },
+    { pair: "GBPPAB", name: "Pound Sterling / Panamanian Balboa", price: "1.2650", change: "+0.15%" },
+    { pair: "GBPPGK", name: "Pound Sterling / Papua New Guinea Kina", price: "4.7000", change: "+0.15%" },
+    { pair: "GBPPYG", name: "Pound Sterling / Paraguayan Guarani", price: "9500.0", change: "+0.30%" },
+    { pair: "GBPPEN", name: "Pound Sterling / Peruvian Nuevo Sol", price: "4.7500", change: "+0.12%" },
+    { pair: "GBPPHP", name: "Pound Sterling / Philippine Peso", price: "73.000", change: "+0.25%" },
+    { pair: "GBPPLN", name: "Pound Sterling / Polish Zloty", price: "5.0500", change: "-0.05%" },
+    { pair: "GBPQAR", name: "Pound Sterling / Qatari Rial", price: "4.6000", change: "+0.10%" },
+    { pair: "GBPRON", name: "Pound Sterling / Romanian New Leu", price: "5.8700", change: "+0.05%" },
+    { pair: "GBPRUB", name: "Pound Sterling / Russian Ruble", price: "115.00", change: "+0.35%" },
+    { pair: "GBPRWF", name: "Pound Sterling / Rwandan Franc", price: "1650.0", change: "+0.65%" },
+    { pair: "GBPSAR", name: "Pound Sterling / Saudi Riyal", price: "4.7500", change: "+0.10%" },
+    { pair: "GBPRSD", name: "Pound Sterling / Serbian Dinar", price: "138.00", change: "+0.10%" },
+    { pair: "GBPSCR", name: "Pound Sterling / Seychelles Rupee", price: "18.000", change: "+0.15%" },
+    { pair: "GBPSGD", name: "Pound Sterling / Singapore Dollar", price: "1.7000", change: "+0.12%" },
+    { pair: "GBPSOS", name: "Pound Sterling / Somali Shilling", price: "720.00", change: "+0.30%" },
+    { pair: "GBPZAR", name: "Pound Sterling / South African Rand", price: "24.000", change: "+0.50%" },
+    { pair: "GBPKRW", name: "Pound Sterling / South Korean Won", price: "1770.0", change: "+0.20%" },
+    { pair: "GBPXDR", name: "Pound Sterling / Special Drawing Rights", price: "0.9500", change: "+0.08%" },
+    { pair: "GBPLKR", name: "Pound Sterling / Sri Lanka Rupee", price: "415.00", change: "+0.40%" },
+    { pair: "GBPSRD", name: "Pound Sterling / Suriname Dollar", price: "42.000", change: "+0.28%" },
+    { pair: "GBPSZL", name: "Pound Sterling / Swaziland Lilangeni", price: "24.000", change: "+0.50%" },
+    { pair: "GBPSEK", name: "Pound Sterling / Swedish Krona", price: "13.700", change: "-0.05%" },
+    { pair: "GBPCHF", name: "Pound Sterling / Swiss Franc", price: "1.1200", change: "+0.01%" },
+    { pair: "GBPTWD", name: "Pound Sterling / Taiwan New Dollar", price: "41.500", change: "+0.22%" },
+    { pair: "GBPTZS", name: "Pound Sterling / Tanzanian Shilling", price: "3450.0", change: "+0.50%" },
+    { pair: "GBPTHB", name: "Pound Sterling / Thai Baht", price: "47.000", change: "+0.18%" },
+    { pair: "GBPTTD", name: "Pound Sterling / Trinidad and Tobago Dollar", price: "8.8000", change: "+0.12%" },
+    { pair: "GBPTND", name: "Pound Sterling / Tunisian Dinar", price: "4.1000", change: "+0.20%" },
+    { pair: "GBPUGX", name: "Pound Sterling / Uganda New Shilling", price: "5100.0", change: "+0.60%" },
+    { pair: "GBPUAH", name: "Pound Sterling / Ukrainian Hryvnia", price: "53.000", change: "+0.30%" },
+    { pair: "GBPAED", name: "Pound Sterling / United Arab Emirates Dirham", price: "4.6500", change: "+0.10%" },
+    { pair: "GBPUSD", name: "Pound Sterling / United States Dollar", price: "1.2650", change: "+0.15%" },
+    { pair: "GBPUYU", name: "Pound Sterling / Uruguayan Peso", price: "50.000", change: "+0.15%" },
+    { pair: "GBPVES", name: "Pound Sterling / Venezuelan Bolivar Soberano", price: "46.000", change: "+0.60%" },
+    { pair: "GBPVND", name: "Pound Sterling / Vietnamese Dong", price: "32500", change: "+0.25%" },
+    { pair: "GBPYER", name: "Pound Sterling / Yemeni Rial", price: "320.00", change: "+0.10%" },
+    { pair: "GBPZMW", name: "Pound Sterling / Zambian Kwacha", price: "35.000", change: "+0.80%" },
+    
+    // NEW HKD Pairs (Placeholder Data)
+    { pair: "HKDAUD", name: "Hong Hong Dollar / Australian Dollar", price: "0.1500", change: "-0.10%" },
+    { pair: "HKDBRL", name: "Hong Hong Dollar / Brazilian Real", price: "0.6800", change: "+0.08%" },
+    { pair: "HKDCAD", name: "Hong Hong Dollar / Canadian Dollar", price: "0.1750", change: "+0.05%" },
+    { pair: "HKDEUR", name: "Hong Hong Dollar / Euro", price: "0.1100", change: "+0.01%" },
+    { pair: "HKDJPY", name: "Hong Hong Dollar / Japanese Yen", price: "20.500", change: "-0.02%" },
+    { pair: "HKDMXN", name: "Hong Hong Dollar / Mexican Nuevo Peso", price: "2.5000", change: "+0.07%" },
+    { pair: "HKDNZD", name: "Hong Hong Dollar / New Zealand Dollar", price: "0.1650", change: "-0.05%" },
+    { pair: "HKDGBP", name: "Hong Hong Dollar / Pound Sterling", price: "0.1000", change: "+0.03%" },
+    { pair: "HKDCHF", name: "Hong Hong Dollar / Swiss Franc", price: "0.1200", change: "+0.01%" },
+    { pair: "HKDUSD", name: "Hong Hong Dollar / United States Dollar", price: "0.1270", change: "0.00%" }, // Near fixed peg
+    
+    // NEW JPY Pairs (Placeholder Data)
+    { pair: "JPYARS", name: "Japanese Yen / Argentine Peso", price: "6.5000", change: "-1.00%" },
+    { pair: "JPYAUD", name: "Japanese Yen / Australian Dollar", price: "0.00940", change: "-0.20%" },
+    { pair: "JPYBRL", name: "Japanese Yen / Brazilian Real", price: "0.0340", change: "+0.15%" },
+    { pair: "JPYCAD", name: "Japanese Yen / Canadian Dollar", price: "0.0102", change: "+0.10%" },
+    { pair: "JPYCLP", name: "Japanese Yen / Chilean Peso", price: "5.8000", change: "-0.08%" },
+    { pair: "JPYCNY", name: "Japanese Yen / Chinese Yuan Renminbi", price: "0.0470", change: "+0.01%" },
+    { pair: "JPYCZK", name: "Japanese Yen / Czech Koruna", price: "0.1500", change: "+0.05%" },
+    { pair: "JPYDKK", name: "Japanese Yen / Danish Krone", price: "0.0420", change: "+0.01%" },
+    { pair: "JPYEUR", name: "Japanese Yen / Euro", price: "0.00580", change: "-0.10%" },
+    { pair: "JPYHKD", name: "Japanese Yen / Hong Hong Dollar", price: "0.0480", change: "+0.02%" },
+    { pair: "JPYHUF", name: "Japanese Yen / Hungarian Forint", price: "2.4500", change: "-0.05%" },
+    { pair: "JPYINR", name: "Japanese Yen / Indian Rupee", price: "0.6200", change: "+0.08%" },
+    { pair: "JPYIDR", name: "Japanese Yen / Indonesian Rupiah", price: "100.00", change: "0.00%" },
+    { pair: "JPYILS", name: "Japanese Yen / Israeli New Shekel", price: "0.0280", change: "-0.03%" },
+    { pair: "JPYMYR", name: "Japanese Yen / Malaysian Ringgit", price: "0.0310", change: "+0.05%" },
+    { pair: "JPYMXN", name: "Japanese Yen / Mexican Nuevo Peso", price: "0.1200", change: "+0.12%" },
+    { pair: "JPYNZD", name: "Japanese Yen / New Zealand Dollar", price: "0.00880", change: "-0.25%" },
+    { pair: "JPYNOK", name: "Japanese Yen / Norwegian Krone", price: "0.0650", change: "-0.08%" },
+    { pair: "JPYCNH", name: "Japanese Yen / Offshore Renminbi", price: "0.0472", change: "+0.01%" },
+    { pair: "JPYPKR", name: "Japanese Yen / Pakistani Rupee", price: "1.7500", change: "+0.20%" },
+    { pair: "JPYPHP", name: "Japanese Yen / Philippine Peso", price: "0.3800", change: "+0.05%" },
+    { pair: "JPYPLN", name: "Japanese Yen / Polish Zloty", price: "0.0270", change: "-0.05%" },
+    { pair: "JPYGBP", name: "Japanese Yen / Pound Sterling", price: "0.00495", change: "+0.05%" },
+    { pair: "JPYRON", name: "Japanese Yen / Romanian New Leu", price: "0.0300", change: "+0.01%" },
+    { pair: "JPYRUB", name: "Japanese Yen / Russian Ruble", price: "0.6100", change: "+0.18%" },
+    { pair: "JPYSAR", name: "Japanese Yen / Saudi Riyal", price: "0.0230", change: "+0.03%" },
+    { pair: "JPYRSD", name: "Japanese Yen / Serbian Dinar", price: "0.7300", change: "+0.01%" },
+    { pair: "JPYSGD", name: "Japanese Yen / Singapore Dollar", price: "0.00840", change: "+0.05%" },
+    { pair: "JPYZAR", name: "Japanese Yen / South African Rand", price: "0.1150", change: "+0.25%" },
+    { pair: "JPYKRW", name: "Japanese Yen / South Korean Won", price: "8.5000", change: "+0.08%" },
+    { pair: "JPYXDR", name: "Japanese Yen / Special Drawing Rights", price: "0.00500", change: "-0.05%" },
+    { pair: "JPYSEK", name: "Japanese Yen / Swedish Krona", price: "0.0720", change: "-0.03%" },
+    { pair: "JPYCHF", name: "Japanese Yen / Swiss Franc", price: "0.00620", change: "+0.05%" },
+    { pair: "JPYTWD", name: "Japanese Yen / Taiwan New Dollar", price: "0.2000", change: "+0.08%" },
+    { pair: "JPYTHB", name: "Japanese Yen / Thai Baht", price: "0.2300", change: "+0.05%" },
+    { pair: "JPYTRY", name: "Japanese Yen / Turkish Lira", price: "0.2200", change: "+0.20%" },
+    { pair: "JPYAED", name: "Japanese Yen / United Arab Emirates Dirham", price: "0.0230", change: "+0.01%" },
+    { pair: "JPYUSD", name: "Japanese Yen / United States Dollar", price: "0.00625", change: "+0.10%" },
+    
+    // NEW USD Pairs (Placeholder Data)
+    { pair: "USDSLE", name: "United States Dollar / Sierra Leone", price: "24.000", change: "+0.50%" },
+    { pair: "USDAFN", name: "United States Dollar / Afghanistan Afghani", price: "74.00", change: "+0.70%" },
+    { pair: "USDALL", name: "United States Dollar / Albanian Lek", price: "96.00", change: "-0.15%" },
+    { pair: "USDDZD", name: "United States Dollar / Algerian Dinar", price: "135.00", change: "+0.15%" },
+    { pair: "USDAOA", name: "United States Dollar / Angolan Kwanza", price: "840.00", change: "+0.80%" },
+    { pair: "USDARS", name: "United States Dollar / Argentine Peso", price: "980.00", change: "-1.60%" },
+    { pair: "USDAMD", name: "United States Dollar / Armenian Dram", price: "390.00", change: "+0.10%" },
+    { pair: "USDAWG", name: "United States Dollar / Aruban Guilder", price: "1.8000", change: "0.00%" },
+    { pair: "USDAUD", name: "United States Dollar / Australian Dollar", price: "1.5000", change: "-0.30%" },
+    { pair: "USDAZN", name: "United States Dollar / Azerbaijanian Manat", price: "1.7000", change: "+0.03%" },
+    { pair: "USDBSD", name: "United States Dollar / Bahamian Dollar", price: "1.0000", change: "0.00%" },
+    { pair: "USDBHD", name: "United States Dollar / Bahraini Dinar", price: "0.3770", change: "0.00%" },
+    { pair: "USDBDT", name: "United States Dollar / Bangladeshi Taka", price: "115.00", change: "+0.20%" },
+    { pair: "USDBBD", name: "United States Dollar / Barbados Dollar", price: "2.0000", change: "0.00%" },
+    { pair: "USDBYN", name: "United States Dollar / Belarusian ruble", price: "3.3500", change: "+0.25%" },
+    { pair: "USDBZD", name: "United States Dollar / Belize Dollar", price: "2.0000", change: "0.00%" },
+    { pair: "USDBMD", name: "United States Dollar / Bermudian Dollar", price: "1.0000", change: "0.00%" },
+    { pair: "USDBTN", name: "United States Dollar / Bhutan Ngultrum", price: "83.000", change: "+0.10%" },
+    { pair: "USDBOB", name: "United States Dollar / Bolivian Boliviano", price: "6.9000", change: "0.00%" },
+    { pair: "USDBAM", name: "United States Dollar / Bosnia/Herzegovina Convertible Marka", price: "1.8000", change: "+0.02%" },
+    { pair: "USDBWP", name: "United States Dollar / Botswana Pula", price: "13.500", change: "+0.10%" },
+    { pair: "USDBRL", name: "United States Dollar / Brazilian Real", price: "5.1500", change: "+0.25%" },
+    { pair: "USDBND", name: "United States Dollar / Brunei Dollarr", price: "1.3500", change: "-0.08%" },
+    { pair: "USDBGN", name: "United States Dollar / Bulgarian Lev", price: "1.8000", change: "+0.02%" },
+    { pair: "USDBIF", name: "United States Dollar / Burundi Franc", price: "2900.0", change: "+0.70%" },
+    { pair: "USDKHR", name: "United States Dollar / Cambodian Riel", price: "4080.0", change: "+0.15%" },
+    { pair: "USDCAD", name: "United States Dollar / Canadian Dollar (Loonie)", price: "1.3680", change: "-0.25%" },
+    { pair: "USDCVE", name: "United States Dollar / Cape Verde Escudo", price: "100.00", change: "+0.03%" },
+    { pair: "USDXCG", name: "United States Dollar / Caribbean Guilder", price: "1.8000", change: "+0.08%" },
+    { pair: "USDKYD", name: "United States Dollar / Cayman Islands Dollar", price: "0.8300", change: "0.00%" },
+    { pair: "USDXOF", name: "United States Dollar / CFA Franc BCEAO", price: "610.00", change: "+0.05%" },
+    { pair: "USDXAF", name: "United States Dollar / CFA Franc BEAC", price: "610.00", change: "+0.05%" },
+    { pair: "USDXPF", name: "United States Dollar / CFP Franc", price: "111.00", change: "+0.02%" },
+    { pair: "USDCLP", name: "United States Dollar / Chilean Peso", price: "880.00", change: "-0.35%" },
+    { pair: "USDCLF", name: "United States Dollar / Chilean Unidades de fomento", price: "0.0280", change: "-0.10%" },
+    { pair: "USDCNY", name: "United States Dollar / Chinese Yuan Renminbi", price: "7.2500", change: "-0.02%" },
+    { pair: "USDCOP", name: "United States Dollar / Colombian Peso", price: "4200.0", change: "+0.40%" },
+    { pair: "USDKMF", name: "United States Dollar / Comoros Franc", price: "450.00", change: "+0.03%" },
+    { pair: "USDCDF", name: "United States Dollar / Congolese Franc", price: "2800.0", change: "+0.60%" },
+    { pair: "USDCRC", name: "United States Dollar / Costa Rican Colon", price: "560.00", change: "-0.15%" },
+    { pair: "USDCUP", name: "United States Dollar / Cuban Peso", price: "24.000", change: "+0.10%" },
+    { pair: "USDCZK", name: "United States Dollar / Czech Koruna", price: "22.800", change: "+0.08%" },
+    { pair: "USDDKK", name: "United States Dollar / Danish Krone", price: "6.9000", change: "+0.03%" },
+    { pair: "USDDJF", name: "United States Dollar / Djibouti Franc", price: "178.00", change: "0.00%" },
+    { pair: "USDDOP", name: "United States Dollar / Dominican Peso", price: "60.000", change: "+0.15%" },
+    { pair: "USDXCD", name: "United States Dollar / East Caribbean Dollar", price: "2.7000", change: "0.00%" },
+    { pair: "USDEGP", name: "United States Dollar / Egyptian Pound", price: "48.500", change: "+0.50%" },
+    { pair: "USDETB", name: "United States Dollar / Ethiopian Birr", price: "60.000", change: "+0.25%" },
+    { pair: "USDEUR", name: "United States Dollar / Euro", price: "0.9330", change: "-0.20%" },
+    { pair: "USDFJD", name: "United States Dollar / Fiji Dollar", price: "2.2500", change: "-0.08%" },
+    { pair: "USDGMD", name: "United States Dollar / Gambian Dalasi", price: "70.000", change: "+0.60%" },
+    { pair: "USDGEL", name: "United States Dollar / Georgian Lari", price: "2.9800", change: "+0.10%" },
+    { pair: "USDGTQ", name: "United States Dollar / Guatemalan Quetzal", price: "7.8000", change: "+0.03%" },
+    { pair: "USDGNF", name: "United States Dollar / Guinean Franc", price: "9000.0", change: "+0.50%" },
+    { pair: "USDGYD", name: "United States Dollar / Guyana Dollar", price: "215.00", change: "+0.08%" },
+    { pair: "USDHTG", name: "United States Dollar / Haitian Gourde", price: "140.00", change: "+0.30%" },
+    { pair: "USDHNL", name: "United States Dollar / Honduran Lempira", price: "25.000", change: "+0.12%" },
+    { pair: "USDHKD", name: "United States Dollar / Hong Hong Dollar", price: "7.8000", change: "0.00%" },
+    { pair: "USDHUF", name: "United States Dollar / Hungarian Forint", price: "370.00", change: "-0.25%" },
+    { pair: "USDISK", name: "United States Dollar / Icelandic Krona", price: "140.00", change: "+0.08%" },
+    { pair: "USDINR", name: "United States Dollar / Indian Rupee", price: "83.000", change: "+0.10%" },
+    { pair: "USDIDR", name: "United States Dollar / Indonesian Rupiah", price: "17200", change: "-0.05%" },
+    { pair: "USDIRR", name: "United States Dollar / Iranian Rial", price: "42000", change: "0.00%" },
+    { pair: "USDIQD", name: "United States Dollar / Iraqi Dinar", price: "1310.0", change: "0.00%" },
+    { pair: "USDILS", name: "United States Dollar / Israeli New Shekel", price: "4.2000", change: "-0.12%" },
+    { pair: "USDJMD", name: "United States Dollar / Jamaican Dollar", price: "160.00", change: "+0.15%" },
+    { pair: "USDJPY", name: "United States Dollar / Japanese Yen (Gopher)", price: "159.60", change: "-0.10%" },
+    { pair: "USDJOD", name: "United States Dollar / Jordanian Dinar", price: "0.7100", change: "0.00%" },
+    { pair: "USDKZT", name: "United States Dollar / Kazakh Tenge", price: "510.00", change: "+0.20%" },
+    { pair: "USDKES", name: "United States Dollar / Kenyan Shilling", price: "145.00", change: "+0.25%" },
+    { pair: "USDKWD", name: "United States Dollar / Kuwaiti Dinar", price: "0.3070", change: "+0.01%" },
+    { pair: "USDKGS", name: "United States Dollar / Kyrgyz Som", price: "88.000", change: "+0.05%" },
+    { pair: "USDLAK", name: "United States Dollar / Lao Kip", price: "21500", change: "+0.35%" },
+    { pair: "USDLBP", name: "United States Dollar / Lebanese Pound", price: "95000", change: "+0.02%" },
+    { pair: "USDLSL", name: "United States Dollar / Lesotho Loti", price: "19.200", change: "+0.30%" },
+    { pair: "USDLRD", name: "United States Dollar / Liberian Dollar", price: "195.00", change: "+0.20%" },
+    { pair: "USDLYD", name: "United States Dollar / Libyan Dinar", price: "5.0000", change: "+0.10%" },
+    { pair: "USDMOP", name: "United States Dollar / Macao Pataca", price: "8.0000", change: "0.00%" },
+    { pair: "USDMKD", name: "United States Dollar / Macedonian Denar", price: "57.500", change: "+0.02%" },
+    { pair: "USDMGA", name: "United States Dollar / Malagasy Ariary", price: "5000.0", change: "+0.60%" },
+    { pair: "USDMWK", name: "United States Dollar / Malawi Kwacha", price: "1780.0", change: "+0.40%" },
+    { pair: "USDMYR", name: "United States Dollar / Malaysian Ringgit", price: "4.7000", change: "+0.05%" },
+    { pair: "USDMVR", name: "United States Dollar / Maldivian Rufiyaa", price: "15.400", change: "0.00%" },
+    { pair: "USDMRU", name: "United States Dollar / Mauritanian Ouguiya", price: "360.00", change: "+0.30%" },
+    { pair: "USDMUR", name: "United States Dollar / Mauritius Rupee", price: "47.500", change: "+0.10%" },
+    { pair: "USDMXN", name: "United States Dollar / Mexican Nuevo Peso", price: "18.200", change: "+0.18%" },
+    { pair: "USDMDL", name: "United States Dollar / Moldovan Leu", price: "18.600", change: "+0.10%" },
+    { pair: "USDMAD", name: "United States Dollar / Moroccan Dirham", price: "10.250", change: "0.00%" },
+    { pair: "USDMZN", name: "United States Dollar / Mozambique Metical", price: "65.000", change: "+0.25%" },
+    { pair: "USDNAD", name: "United States Dollar / Namibian Dollar", price: "19.200", change: "+0.30%" },
+    { pair: "USDNPR", name: "United States Dollar / Nepalese Rupee", price: "135.00", change: "+0.10%" },
+    { pair: "USDNZD", name: "United States Dollar / New Zealand Dollar", price: "1.6500", change: "+0.30%" },
+    { pair: "USDNIO", name: "United States Dollar / Nicaraguan Cordoba Oro", price: "37.500", change: "+0.05%" },
+    { pair: "USDNGN", name: "United States Dollar / Nigerian Naira", price: "1500.0", change: "+0.80%" },
+    { pair: "USDNOK", name: "United States Dollar / Norwegian Krone", price: "11.000", change: "-0.20%" },
+    { pair: "USDCNH", name: "United States Dollar / Offshore Renminbi", price: "7.2700", change: "-0.01%" },
+    { pair: "USDOMR", name: "United States Dollar / Oman Rial", price: "0.3850", change: "0.00%" },
+    { pair: "USDPKR", name: "United States Dollar / Pakistani Rupee", price: "310.00", change: "+0.40%" },
+    { pair: "USDPAB", name: "United States Dollar / Panamanian Balboa", price: "1.0000", change: "0.00%" },
+    { pair: "USDPGK", name: "United States Dollar / Papua New Guinea Kina", price: "3.7500", change: "+0.05%" },
+    { pair: "USDPYG", name: "United States Dollar / Paraguayan Guarani", price: "7400.0", change: "+0.20%" },
+    { pair: "USDPEN", name: "United States Dollar / Peruvian Nuevo Sol", price: "3.7300", change: "+0.05%" },
+    { pair: "USDPHP", name: "United States Dollar / Philippine Peso", price: "57.800", change: "+0.15%" },
+    { pair: "USDPLN", name: "United States Dollar / Polish Zloty", price: "4.0000", change: "-0.12%" },
+    { pair: "USDGBP", name: "United States Dollar / Pound Sterling", price: "0.7900", change: "-0.15%" },
+    { pair: "USDQAR", name: "United States Dollar / Qatari Rial", price: "3.6400", change: "0.00%" },
+    { pair: "USDRWF", name: "United States Dollar / Rwandan Franc", price: "1300.0", change: "+0.45%" },
+    { pair: "USDSTN", name: "United States Dollar / Sao Tomean Dobra", price: "22500", change: "+0.10%" },
+    { pair: "USDSAR", name: "United States Dollar / Saudi Riyal", price: "3.7500", change: "0.00%" },
+    { pair: "USDRSD", name: "United States Dollar / Serbian Dinar", price: "110.00", change: "+0.05%" },
+    { pair: "USDSCR", name: "United States Dollar / Seychelles Rupee", price: "14.000", change: "+0.08%" },
+    { pair: "USDSGD", name: "United States Dollar / Singapore Dollar", price: "1.3500", change: "+0.05%" },
+    { pair: "USDSBD", name: "United States Dollar / Solomon Islands Dollar", price: "8.4000", change: "+0.02%" },
+    { pair: "USDSOS", name: "United States Dollar / Somali Shilling", price: "570.00", change: "+0.20%" },
+    { pair: "USDZAR", name: "United States Dollar / South African Rand", price: "19.200", change: "+0.30%" },
+    { pair: "USDKRW", name: "United States Dollar / South Korean Won", price: "1400.0", change: "+0.10%" },
+    { pair: "USDXDR", name: "United States Dollar / Special Drawing Rights", price: "0.7500", change: "0.00%" },
+    { pair: "USDLKR", name: "United States Dollar / Sri Lanka Rupee", price: "325.00", change: "+0.30%" },
+    { pair: "USDSDG", name: "United States Dollar / Sudanese Pound", price: "600.00", change: "+0.50%" },
+    { pair: "USDSRD", name: "United States Dollar / Suriname Dollar", price: "32.500", change: "+0.15%" },
+    { pair: "USDSZL", name: "United States Dollar / Swaziland Lilangeni", price: "19.200", change: "+0.30%" },
+    { pair: "USDSEK", name: "United States Dollar / Swedish Krona", price: "10.800", change: "-0.15%" },
+    { pair: "USDCHF", name: "United States Dollar / Swiss Franc (Swissie)", price: "0.8940", change: "-0.05%" },
+    { pair: "USDTWD", name: "United States Dollar / Taiwan New Dollar", price: "32.800", change: "+0.15%" },
+    { pair: "USDTJS", name: "United States Dollar / Tajik Somoni", price: "11.600", change: "+0.05%" },
+    { pair: "USDTZS", name: "United States Dollar / Tanzanian Shilling", price: "2700.0", change: "+0.35%" },
+    { pair: "USDTHB", name: "United States Dollar / Thai Baht", price: "37.000", change: "+0.08%" },
+    { pair: "USDTTD", name: "United States Dollar / Trinidad and Tobago Dollar", price: "6.8000", change: "+0.05%" },
+    { pair: "USDTND", name: "United States Dollar / Tunisian Dinar", price: "3.2500", change: "+0.10%" },
+    { pair: "USDTMT", name: "United States Dollar / Turkmenistan Manat", price: "3.5000", change: "0.00%" },
+    { pair: "USDUGX", name: "United States Dollar / Uganda New Shilling", price: "4000.0", change: "+0.40%" },
+    { pair: "USDUAH", name: "United States Dollar / Ukrainian Hryvnia", price: "42.000", change: "+0.20%" },
+    { pair: "USDAED", name: "United States Dollar / United Arab Emirates Dirham", price: "3.6700", change: "0.00%" },
+    { pair: "USDUYU", name: "United States Dollar / Uruguayan Peso", price: "39.200", change: "+0.08%" },
+    { pair: "USDUZS", name: "United States Dollar / Uzbekistani Sum", price: "12600", change: "+0.25%" },
+    { pair: "USDVES", name: "United States Dollar / Venezuelan Bolivar Soberano", price: "36.000", change: "+0.40%" },
+    { pair: "USDVND", name: "United States Dollar / Vietnamese Dong", price: "25500", change: "+0.15%" },
+    { pair: "USDYER", name: "United States Dollar / Yemeni Rial", price: "250.00", change: "0.00%" },
+    { pair: "USDZMW", name: "United States Dollar / Zambian Kwacha", price: "28.000", change: "+0.60%" },
+    { pair: "USDTRY", name: "US Dollar / Turkey New Lira", price: "32.000", change: "+0.30%" },
+    { pair: "USDSVC", name: "US Dollar / El Salvador Colon", price: "8.7500", change: "0.00%" },
+    { pair: "USDGHS", name: "US Dollar / Ghanaian New Cedi", price: "15.000", change: "+0.70%" },
+    { pair: "USDRON", name: "US Dollar / Romanian New Leu", price: "4.6300", change: "+0.03%" },
+    { pair: "USDRUB", name: "US Dollar / Russian Ruble", price: "91.500", change: "+0.20%" },
+    
+    // NEW ZAR Pairs (Placeholder Data)
+    { pair: "ZARBFRS", name: "South African Rand Buffer Finance Price", price: "1.0000", change: "0.00%" },
+    { pair: "ZARPRIME", name: "South African Rand Prime Rate", price: "11.75%", change: "0.00%" },
+    { pair: "ZARAUD", name: "South African Rand / Australian Dollar", price: "0.0650", change: "-0.20%" },
+    { pair: "ZARBRL", name: "South African Rand / Brazilian Real", price: "0.2700", change: "+0.05%" },
+    { pair: "ZARCAD", name: "South African Rand / Canadian Dollar", price: "0.0700", change: "-0.05%" },
+    { pair: "ZAREUR", name: "South African Rand / Euro", price: "0.0480", change: "-0.40%" },
+    { pair: "ZARJPY", name: "South African Rand / Japanese Yen", price: "8.7000", change: "-0.25%" },
+    { pair: "ZARMXN", name: "South African Rand / Mexican Nuevo Peso", price: "0.9500", change: "-0.10%" },
+    { pair: "ZARNZD", name: "South African Rand / New Zealand Dollar", price: "0.0600", change: "-0.30%" },
+    { pair: "ZARGBP", name: "South African Rand / Pound Sterling", price: "0.0410", change: "-0.50%" },
+    { pair: "ZARCHF", name: "South African Rand / Swiss Franc", price: "0.0470", change: "-0.30%" },
+    { pair: "ZARUSD", name: "South African Rand / United States Dollar", price: "0.0520", change: "-0.30%" },
   ],
 };
 
-export default function Markets() {
-  const [activeTab, setActiveTab] = useState('forex');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [watchlist, setWatchlist] = useState(['BTC/USD', 'AAPL']);
+function Markets() {
+  const [activeTab, setActiveTab] = useState("stocks");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [watchlist, setWatchlist] = useState(["S&P 500", "BTC/USD", "EUR/USD", "Gold", "AAPL"]);
+  const [sortBy, setSortBy] = useState("name");
 
   const allAssets = useMemo(() => Object.values(assets).flat(), []);
 
   const toggleWatchlist = (pair) => {
-    setWatchlist((prev) =>
-      prev.includes(pair) ? prev.filter((p) => p !== pair) : [...prev, pair]
-    );
+    setWatchlist((prev) => (prev.includes(pair) ? prev.filter((p) => p !== pair) : [...prev, pair]));
   };
 
   const filteredAssets = useMemo(() => {
-    let currentAssets = [];
-    if (activeTab === 'watchlist') {
-      currentAssets = allAssets.filter((asset) => watchlist.includes(asset.pair));
-    } else {
-      currentAssets = assets[activeTab] || [];
-    }
-
+    let currentAssets = activeTab === "watchlist" ? allAssets.filter((a) => watchlist.includes(a.pair)) : assets[activeTab] || [];
     if (searchTerm) {
-      return currentAssets.filter((asset) =>
-        asset.pair.toLowerCase().includes(searchTerm.toLowerCase())
+      currentAssets = currentAssets.filter(
+        (asset) =>
+          asset.pair.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (asset.name && asset.name.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
+
+    // Sorting
+    currentAssets.sort((a, b) => {
+      if (sortBy === "name") return a.pair.localeCompare(b.pair);
+      if (sortBy === "price")
+        return parseFloat(a.price.replace(/[^0-9.-]+/g, "")) - parseFloat(b.price.replace(/[^0-9.-]+/g, ""));
+      if (sortBy === "change")
+        return parseFloat(a.change) - parseFloat(b.change);
+      return 0;
+    });
+
     return currentAssets;
-  }, [activeTab, searchTerm, watchlist, allAssets]);
+  }, [activeTab, searchTerm, watchlist, allAssets, sortBy]);
 
   return (
     <div className="min-h-screen bg-[#020617] text-white px-4 sm:px-8 py-12">
       <div className="max-w-7xl mx-auto">
-
-        {/* PAGE HEADER */}
+        {/* HEADER */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
-            Explore the Markets
-          </h1>
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">Explore the Markets</h1>
           <p className="text-gray-400 mt-3 text-base sm:text-lg">
-            Real-time insights across Forex, Crypto, Stocks & Commodities.
+            Real-time insights across Global Indices, Forex, Crypto & Commodities.
           </p>
         </div>
 
         {/* CONTROLS */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-4">
           <div className="flex flex-wrap justify-center gap-2">
-            {['watchlist', 'forex', 'crypto', 'stocks', 'commodities'].map((tab) => (
+            {["watchlist", "stocks", "crypto", "forex", "commodities"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 text-sm sm:text-base rounded-lg font-semibold capitalize transition ${
                   activeTab === tab
-                    ? 'bg-blue-600 shadow-md shadow-blue-600/20'
-                    : 'bg-[#0B0F19] border border-white/10 text-gray-300 hover:bg-white/5'
+                    ? "bg-blue-600 shadow-md shadow-blue-600/20"
+                    : "bg-[#0B0F19] border border-white/10 text-gray-300 hover:bg-white/5"
                 }`}
               >
-                {tab}
+                {tab === "stocks" ? "Indices" : tab}
               </button>
             ))}
           </div>
 
-          <div className="relative w-full sm:w-64">
+          <div className="flex gap-2 flex-wrap justify-center sm:justify-end">
             <input
               type="text"
               placeholder="Search asset..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#0E1424] p-3 pl-10 rounded-lg border border-white/10 text-sm text-gray-300 outline-none focus:ring-2 focus:ring-blue-600"
+              className="w-full sm:w-64 bg-[#0E1424] p-3 pl-10 rounded-lg border border-white/10 text-sm text-gray-300 outline-none focus:ring-2 focus:ring-blue-600"
             />
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+            <select
+              className="bg-[#0E1424] p-2 rounded-lg text-gray-300"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+              <option value="name">Sort by Name</option>
+              <option value="price">Sort by Price</option>
+              <option value="change">Sort by Change</option>
+            </select>
           </div>
         </div>
 
         {/* MARKET GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredAssets.map((asset) => (
-            <div
-              key={asset.pair}
-              className="bg-[#0B0F19] p-5 rounded-xl border border-white/10 hover:border-blue-600/40 transition shadow-lg flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex justify-between items-start">
-                  <h2 className="text-lg font-bold">{asset.pair}</h2>
-                  <StarIcon
-                    isFilled={watchlist.includes(asset.pair)}
-                    onClick={() => toggleWatchlist(asset.pair)}
-                  />
+          {filteredAssets.map((asset) => {
+            const sparkData = Array.from({ length: 10 }, () => Math.random() * 40);
+            const positive = !asset.change.startsWith("-");
+
+            return (
+              <motion.div
+                key={asset.pair}
+                whileHover={{ scale: 1.05 }}
+                className="bg-[#0B0F19] p-5 rounded-xl border border-white/10 hover:border-blue-600/40 transition shadow-lg flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h2 className="text-lg font-bold">{asset.pair}</h2>
+                      <p className="text-xs text-gray-400">{asset.name}</p>
+                    </div>
+                    <StarIcon isFilled={watchlist.includes(asset.pair)} onClick={() => toggleWatchlist(asset.pair)} />
+                  </div>
+
+                  <p className="text-gray-300 mt-2 text-2xl font-semibold">{asset.price}</p>
+                  <p className={`font-bold ${positive ? "text-green-400" : "text-red-400"}`}>{asset.change}</p>
+                  <Sparkline data={sparkData} positive={positive} />
                 </div>
 
-                <p className="text-gray-300 mt-1 text-2xl font-semibold">
-                  {asset.price}
-                </p>
-
-                <p
-                  className={`font-bold ${
-                    asset.change.startsWith('-') ? 'text-red-400' : 'text-green-400'
-                  }`}
+                <Link
+                  href="/trading-terminal"
+                  className="mt-4 w-full block text-center py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition"
                 >
-                  {asset.change}
-                </p>
-
-                <Sparkline
-                  data={[1, 5, 2, 6, 3, 5, 2]}
-                  positive={!asset.change.startsWith('-')}
-                />
-              </div>
-
-              <Link
-                href="/trading-terminal"
-                className="mt-4 w-full block text-center py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition"
-              >
-                View Chart
-              </Link>
-            </div>
-          ))}
+                  View Chart
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
 
         {filteredAssets.length === 0 && (
@@ -206,4 +1308,5 @@ export default function Markets() {
     </div>
   );
 }
-'''
+
+export default dynamic(() => Promise.resolve(Markets), { ssr: false });

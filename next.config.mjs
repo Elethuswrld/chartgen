@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // ✅ use the new key
+  serverExternalPackages: ["lightweight-charts"],
+
   experimental: {
-    serverComponentsExternalPackages: ["lightweight-charts"],
+    // keep any other experimental flags you’re using here
   },
 };
 
