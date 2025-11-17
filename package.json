@@ -11,11 +11,13 @@
   "dependencies": {
     "firebase": "^12.5.0",
     "framer-motion": "^12.23.24",
+    "lightweight-charts": "^5.0.9",
     "lucide-react": "^0.553.0",
-    "next": "^14.2.33",
+    "next": "^16.0.3",
     "next-themes": "^0.4.6",
-    "react": "^18",
-    "react-dom": "^18"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-select": "^5.10.2"
   },
   "devDependencies": {
     "@types/node": "^20",

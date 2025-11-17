@@ -26,12 +26,12 @@ export default function Home() {
       {/* HERO SECTION */}
       <section className="text-center px-8 py-24 max-w-4xl mx-auto">
         <h2 className="text-6xl font-extrabold leading-tight">
-          Trade Smarter with <span className="text-blue-500">AI-Powered</span> Precision
+          The Future of Trading is <span className="text-blue-500">Smarter, Not Harder</span>
         </h2>
 
         <p className="mt-6 text-gray-400 text-xl">
-          Multi-asset trading platform for Stocks, Forex, Crypto & Commodities.  
-          Powered by next-gen analytics and real-time AI insights.
+          ChartGen is a multi-asset trading platform for Stocks, Forex, Crypto & Commodities,  
+          supercharged with next-gen analytics and real-time AI insights.
         </p>
 
         <div className="mt-10 flex justify-center">
@@ -39,7 +39,7 @@ export default function Home() {
             href="/register"
             className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl text-lg font-semibold shadow-lg shadow-blue-600/20"
           >
-            Get Started For Free
+            Start Your Free Trial
           </Link>
         </div>
       </section>
@@ -47,31 +47,28 @@ export default function Home() {
       {/* FEATURES */}
       <section className="px-8 py-20 max-w-6xl mx-auto">
         <h3 className="text-4xl font-bold text-center mb-14">
-          Why Traders Choose ChartGen
+          Everything You Need to Outperform
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div className="bg-[#0B0F19] p-8 rounded-2xl border border-white/10 hover:border-blue-600/40 transition">
-            <h4 className="text-2xl font-bold mb-3">Advanced Charting</h4>
+            <h4 className="text-2xl font-bold mb-3">Institutional-Grade Charting</h4>
             <p className="text-gray-400">
-              Lightning-fast analytics, indicators, and drawing tools powered by
-              a TradingView-level UI.
+              Experience lightning-fast analytics, 100+ indicators, and advanced drawing tools with our TradingView-level UI.
             </p>
           </div>
 
           <div className="bg-[#0B0F19] p-8 rounded-2xl border border-white/10 hover:border-blue-600/40 transition">
-            <h4 className="text-2xl font-bold mb-3">AI Trading Assistant</h4>
+            <h4 className="text-2xl font-bold mb-3">Your AI Trading Co-Pilot</h4>
             <p className="text-gray-400">
-              Market insights, signal detection, risk scoring, and automated
-              journaling — all powered by AI.
+              Get real-time market insights, AI-driven signal detection, risk scoring, and automated trade journaling.
             </p>
           </div>
 
           <div className="bg-[#0B0F19] p-8 rounded-2xl border border-white/10 hover:border-blue-600/40 transition">
-            <h4 className="text-2xl font-bold mb-3">Multi-Asset Access</h4>
+            <h4 className="text-2xl font-bold mb-3">One Platform, All Assets</h4>
             <p className="text-gray-400">
-              Trade Forex, Crypto, Stocks, Metals, Indices & Commodities — all
-              from one unified platform.
+              Seamlessly trade Forex, Crypto, Stocks, Metals, Indices & Commodities from a single, unified interface.
             </p>
           </div>
         </div>
@@ -79,7 +76,7 @@ export default function Home() {
 
       {/* FOOTER */}
       <footer className="text-center py-8 text-gray-500 border-t border-white/10">
-        <p>© {new Date().getFullYear()} ChartGen. Trade Smarter.</p>
+        <p>© {new Date().getFullYear()} ChartGen. All Rights Reserved.</p>
       </footer>
     </div>
   );
