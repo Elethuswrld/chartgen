@@ -4,9 +4,14 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
+import React from 'react';
 
 // Star icon component
-const StarIcon = ({ isFilled, ...props }) => (
+interface StarIconProps extends React.SVGProps<SVGSVGElement> {
+  isFilled: boolean;
+}
+
+const StarIcon: React.FC<StarIconProps> = ({ isFilled, ...props }) => (
   <svg
     {...props}
     xmlns="http://www.w3.org/2000/svg"
@@ -25,7 +30,12 @@ const StarIcon = ({ isFilled, ...props }) => (
 );
 
 // Dynamic sparkline component
-const Sparkline = ({ data, positive }) => {
+interface SparklineProps {
+  data: number[];
+  positive: boolean;
+}
+
+const Sparkline: React.FC<SparklineProps> = ({ data, positive }) => {
   const path = data.map((y, i) => `${i * (100 / (data.length - 1))} ${40 - y}`).join(" L ");
   return (
     <svg width="100%" height="40" viewBox="0 0 100 40" className="mt-2">
@@ -1186,12 +1196,12 @@ function Markets() {
 
   const allAssets = useMemo(() => Object.values(assets).flat(), []);
 
-  const toggleWatchlist = (pair) => {
+  const toggleWatchlist = (pair: string) => {
     setWatchlist((prev) => (prev.includes(pair) ? prev.filter((p) => p !== pair) : [...prev, pair]));
   };
 
   const filteredAssets = useMemo(() => {
-    let currentAssets = activeTab === "watchlist" ? allAssets.filter((a) => watchlist.includes(a.pair)) : assets[activeTab] || [];
+    let currentAssets = activeTab === "watchlist" ? allAssets.filter((a) => watchlist.includes(a.pair)) : assets[activeTab as keyof typeof assets] || [];
     if (searchTerm) {
       currentAssets = currentAssets.filter(
         (asset) =>
@@ -1206,7 +1216,7 @@ function Markets() {
       if (sortBy === "price")
         return parseFloat(a.price.replace(/[^0-9.-]+/g, "")) - parseFloat(b.price.replace(/[^0-9.-]+/g, ""));
       if (sortBy === "change")
-        return parseFloat(a.change) - parseFloat(b.change);
+        return parseFloat(a.change.replace(/[^0-9.-%]+/g, "")) - parseFloat(b.change.replace(/[^0-9.-%]+/g, ""));
       return 0;
     });
 
