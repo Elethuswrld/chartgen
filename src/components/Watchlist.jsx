@@ -1,15 +1,17 @@
 "use client";
 
+import { useAuth } from '../lib/hooks/useAuth';
 import { useRealtime } from '../lib/hooks/useRealtime';
 import { WatchlistSkeleton } from './WatchlistSkeleton';
 
 export function Watchlist() {
-  const watchlistData = useRealtime('watchlist/user-default');
+  const { user } = useAuth();
+  const watchlistData = useRealtime(user ? `watchlist/${user.uid}` : null);
 
   return (
     <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md">
       <h2 className="text-xl font-bold mb-4">Watchlist</h2>
-      {watchlistData ? (
+      {watchlistData && watchlistData.stocks ? (
         <ul className="space-y-4">
           {watchlistData.stocks.map((stock) => (
             <li key={stock.name} className="flex justify-between items-center p-3 bg-secondary rounded-lg">

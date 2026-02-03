@@ -1,6 +1,6 @@
 
 import { db } from "../firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 
 export const useFirestore = () => {
   const getUserData = async (uid: string) => {
@@ -13,5 +13,30 @@ export const useFirestore = () => {
     await setDoc(doc(db, "users", uid), data, { merge: true });
   };
 
-  return { getUserData, setUserData };
+  const addToWatchlist = async (uid: string, stock: { name: string; price: number; movement: string; change: number }) => {
+    const watchlistRef = doc(db, "watchlists", uid);
+    const watchlistDoc = await getDoc(watchlistRef);
+    if (!watchlistDoc.exists()) {
+        await setDoc(watchlistRef, { stocks: [] });
+    }
+    await updateDoc(watchlistRef, {
+      stocks: arrayUnion(stock),
+    });
+  };
+
+  const removeFromWatchlist = async (uid: string, stockName: string) => {
+    const watchlistRef = doc(db, "watchlists", uid);
+    const watchlistDoc = await getDoc(watchlistRef);
+    if (watchlistDoc.exists()) {
+      const watchlistData = watchlistDoc.data();
+      const stockToRemove = watchlistData.stocks.find((stock: any) => stock.name === stockName);
+      if (stockToRemove) {
+        await updateDoc(watchlistRef, {
+          stocks: arrayRemove(stockToRemove),
+        });
+      }
+    }
+  };
+
+  return { getUserData, setUserData, addToWatchlist, removeFromWatchlist };
 };

@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
 import {
   createChart,
@@ -9,6 +7,11 @@ import {
   ISeriesApi,
   CandlestickData,
 } from "lightweight-charts/standalone";
+import { useAuth } from '../../lib/hooks/useAuth';
+import { useFirestore } from '../../lib/hooks/useFirestore';
+import { AIPanel } from "../AIPanel";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "../../lib/firebase";
 
 type SymbolOption = { symbol: string; type: "crypto" | "stock" | "forex" };
 
@@ -22,10 +25,60 @@ export default function UniversalChart({ finnhubApiKey }: { finnhubApiKey: strin
   const candleDataRef = useRef<CandlestickData[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { user } = useAuth();
+  const { addToWatchlist } = useFirestore();
 
   const filteredSymbols = symbols.filter((s) =>
     s.symbol.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleAddToWatchlist = () => {
+    if (user && selectedSymbol && candleDataRef.current.length > 0) {
+      const lastCandle = candleDataRef.current[candleDataRef.current.length - 1];
+      const previousCandle = candleDataRef.current[candleDataRef.current.length - 2];
+      const price = lastCandle.close;
+      let change = 0;
+      let movement = 'up';
+
+      if(previousCandle) {
+          change = ((price - previousCandle.close) / previousCandle.close) * 100;
+          if (change < 0) {
+              movement = 'down';
+          }
+      }
+
+      const stock = {
+        name: selectedSymbol.symbol,
+        price: price,
+        movement: movement,
+        change: change,
+      };
+      addToWatchlist(user.uid, stock);
+    }
+  };
+
+  const getAIResponse = async (promptType: string) => {
+    if (!selectedSymbol) return "Please select a symbol first.";
+
+    const geminiProxy = httpsCallable(functions, 'geminiProxy');
+    const ohlc = candleDataRef.current.slice(-20);
+    const prompt = `
+      Symbol: ${selectedSymbol.symbol}
+      Timeframe: 1h
+      Recent OHLC: ${JSON.stringify(ohlc)}
+
+      Please provide a response for the following request: ${promptType}
+    `;
+
+    try {
+      const result = await geminiProxy({ prompt });
+      const data = result.data as { response: string };
+      return data.response;
+    } catch (error) {
+      console.error("Error calling geminiProxy function:", error);
+      return "Error getting response from AI.";
+    }
+  };
 
   // Fetch symbols (stocks + crypto)
   useEffect(() => {
@@ -196,26 +249,38 @@ export default function UniversalChart({ finnhubApiKey }: { finnhubApiKey: strin
   }, [selectedSymbol, finnhubApiKey]);
 
   return (
-    <div>
-      <input
-        type="text"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Search symbols"
-      />
-      <select
-        value={selectedSymbol?.symbol || ""}
-        onChange={(e) =>
-          setSelectedSymbol(symbols.find((s) => s.symbol === e.target.value) || null)
-        }
-      >
-        {filteredSymbols.map((s) => (
-          <option key={s.symbol} value={s.symbol}>
-            {s.symbol} ({s.type})
-          </option>
-        ))}
-      </select>
-      <div ref={chartContainerRef} style={{ height: "500px" }} />
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+            <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search symbols"
+                className="w-full bg-[#0E1424] p-3 rounded-lg border border-white/10 mb-4"
+            />
+            <select
+                value={selectedSymbol?.symbol || ""}
+                onChange={(e) =>
+                setSelectedSymbol(symbols.find((s) => s.symbol === e.target.value) || null)
+                }
+                className="w-full bg-[#0E1424] p-3 rounded-lg border border-white/10 mb-4"
+            >
+                {filteredSymbols.map((s) => (
+                <option key={s.symbol} value={s.symbol}>
+                    {s.symbol} ({s.type})
+                </option>
+                ))}
+            </select>
+            <button onClick={handleAddToWatchlist} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">⭐ Add to Watchlist</button>
+            <div ref={chartContainerRef} style={{ height: "500px" }} />
+        </div>
+        <div>
+            <AIPanel
+                onExplain={() => getAIResponse("Explain this move")}
+                onGeneratePlan={() => getAIResponse("Generate trade plan")}
+                onGetTrend={() => getAIResponse("What's the trend?")}
+            />
+        </div>
     </div>
   );
 }

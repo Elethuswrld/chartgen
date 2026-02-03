@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { Watchlist } from "../../components/Watchlist";
+import UniversalChart from "../../components/Chart/UniversalChart";
 
 export default function Home() {
   return (
@@ -13,7 +15,7 @@ export default function Home() {
         {/* ------------------------- */}
         <div className="lg:col-span-2">
           <div className="bg-[#0B0F19] rounded-2xl p-6 shadow-lg border border-white/5 h-[360px] flex items-center justify-center text-gray-500">
-            Chart will be displayed here
+            <UniversalChart finnhubApiKey={process.env.NEXT_PUBLIC_FINNHUB_API_KEY || ""} />
           </div>
 
           {/* Spacing for alignment below */}
@@ -49,33 +51,7 @@ export default function Home() {
           {/* ------------------------- */}
           {/* WATCHLIST */}
           {/* ------------------------- */}
-          <div>
-            <h2 className="text-lg font-semibold mb-3">Watchlist</h2>
-            <div className="space-y-3">
-              {[
-                { symbol: "AAPL", price: "$150.00", change: "+1.25%" },
-                { symbol: "GOOGL", price: "$2800.00", change: "-0.75%" },
-                { symbol: "TSLA", price: "$700.00", change: "+2.50%" },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  className="flex justify-between items-center bg-[#0E1424] p-4 rounded-xl border border-white/5 shadow-md"
-                >
-                  <span className="text-gray-200 font-medium">{item.symbol}</span>
-                  <span className="text-gray-400">{item.price}</span>
-                  <span
-                    className={
-                      item.change.startsWith("-")
-                        ? "text-red-400 font-semibold"
-                        : "text-green-400 font-semibold"
-                    }
-                  >
-                    {item.change}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <Watchlist />
 
           {/* ------------------------- */}
           {/* NEWS FEED */}
