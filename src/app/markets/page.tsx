@@ -1216,7 +1216,7 @@ function Markets() {
       if (sortBy === "price")
         return parseFloat(a.price.replace(/[^0-9.-]+/g, "")) - parseFloat(b.price.replace(/[^0-9.-]+/g, ""));
       if (sortBy === "change")
-        return parseFloat(a.change.replace(/[^0-9.-%]+/g, "")) - parseFloat(b.change.replace(/[^0-9.-%]+/g, ""));
+        return parseFloat(a.change.replace(/[^0-9.%-]+/g, "")) - parseFloat(b.change.replace(/[^0-9.%-]+/g, ""));
       return 0;
     });
 

@@ -5,12 +5,12 @@ import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyALjO0nF9iElTr_ZWrCEKqhE2QfAsTT6Dw",
-  authDomain: "chartgen-web.firebaseapp.com",
-  projectId: "chartgen-web",
-  storageBucket: "chartgen-web.appspot.com",
-  messagingSenderId: "45869815252",
-  appId: "1:45869815252:web:9e0100304bb240e2c63241",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);

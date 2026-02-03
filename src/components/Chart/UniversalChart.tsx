@@ -8,7 +8,7 @@ import {
   IChartApi,
   ISeriesApi,
   CandlestickData,
-} from "lightweight-charts";
+} from "lightweight-charts/standalone";
 
 type SymbolOption = { symbol: string; type: "crypto" | "stock" | "forex" };
 
