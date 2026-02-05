@@ -5,7 +5,7 @@ import { useFirestore } from './useFirestore';
 const useMarkets = () => {
   const { user } = useAuth();
   const { addToWatchlist, removeFromWatchlist } = useFirestore();
-  const [assets, setAssets] = useState({ stocks: [], crypto: [], forex: [], commodities: [] });
+  const [assets, setAssets] = useState<{stocks: any[], crypto: any[], forex: any[], commodities: any[]}>({ stocks: [], crypto: [], forex: [], commodities: [] });
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -39,15 +39,6 @@ const useMarkets = () => {
     fetchAssets();
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      const fetchWatchlist = async () => {
-        // Fetch watchlist from Firestore and update the state
-      };
-      fetchWatchlist();
-    }
-  }, [user]);
-
   const topMovers = useMemo(() => {
     // Calculate top movers from the assets
     return [];
@@ -59,10 +50,7 @@ const useMarkets = () => {
       removeFromWatchlist(user.uid, pair);
       setWatchlist(watchlist.filter((item) => item !== pair));
     } else {
-        // Note: The addToWatchlist function expects a stock object with more details.
-        // You would need to fetch the current price and other details for the selected pair
-        // before adding it to the watchlist. For this example, we'll just add the pair name.
-      addToWatchlist(user.uid, { name: pair, price: 0, movement: 'up', change: 0 });
+      addToWatchlist(user.uid, { name: pair, addedAt: Date.now() });
       setWatchlist([...watchlist, pair]);
     }
   };

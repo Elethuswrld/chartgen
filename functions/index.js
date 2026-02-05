@@ -88,16 +88,27 @@ exports.geminiProxy = functions.https.onCall(async (data, context) => {
 });
 
 exports.marketDataProxy = functions.https.onCall(async (data, context) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError("unauthenticated", "You must be logged in to access market data.");
-    }
-  
-    const { source, endpoint, params } = data;
-    const finnhubApiKey = process.env.FINNHUB_API_KEY;
-  
-    let url;
-  
-    try {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "You must be logged in to access market data.");
+  }
+
+  const { source, endpoint, params } = data;
+  const finnhubApiKey = process.env.FINNHUB_API_KEY;
+
+  try {
+    if (source === 'finnhub' && endpoint === 'quote' && Array.isArray(params.symbols)) {
+      const quotePromises = params.symbols.map(symbol => {
+        const finnHubUrl = new URL(`https://finnhub.io/api/v1/quote`);
+        finnHubUrl.search = new URLSearchParams({ symbol }).toString();
+        finnHubUrl.searchParams.append('token', finnhubApiKey);
+        return axios.get(finnHubUrl.toString()).then(res => ({ [symbol]: res.data }));
+      });
+
+      const quotes = await Promise.all(quotePromises);
+      return Object.assign({}, ...quotes);
+
+    } else {
+      let url;
       switch (source) {
         case 'finnhub':
           const finnHubUrl = new URL(`https://finnhub.io/api/v1/${endpoint}`);
@@ -116,9 +127,10 @@ exports.marketDataProxy = functions.https.onCall(async (data, context) => {
   
       const response = await axios.get(url);
       return response.data;
-  
-    } catch (error) {
-      console.error(`Error fetching from ${source} proxy:`, error.message);
-      throw new functions.https.HttpsError("internal", `Error fetching data from ${source}.`);
     }
+  } catch (error) {
+    console.error(`Error fetching from ${source} proxy:`, error.message);
+    throw new functions.https.HttpsError("internal", `Error fetching data from ${source}.`);
+  }
 });
+

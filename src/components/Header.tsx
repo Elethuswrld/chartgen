@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import { useAuth } from '../lib/hooks/useAuth';
 
 export const Header: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   return (
     <header className="bg-primary text-primary-foreground p-4 flex justify-between items-center">
@@ -24,6 +26,11 @@ export const Header: React.FC = () => {
         <Link href="/charts" className="p-2 hover:scale-105 transition-transform duration-200">Charts</Link>
         <Link href="/ai" className="p-2 hover:scale-105 transition-transform duration-200">AI</Link>
         <Link href="/settings" className="p-2 hover:scale-105 transition-transform duration-200">Settings</Link>
+        {user ? (
+          <button onClick={signOut} className="p-2 hover:scale-105 transition-transform duration-200">Logout</button>
+        ) : (
+          <Link href="/login" className="p-2 hover:scale-105 transition-transform duration-200">Login</Link>
+        )}
         <ThemeSwitcher />
       </nav>
 
@@ -33,6 +40,11 @@ export const Header: React.FC = () => {
           <Link href="/charts" className="p-4 hover:scale-105 transition-transform duration-200" onClick={() => setIsOpen(false)}>Charts</Link>
           <Link href="/ai" className="p-4 hover:scale-105 transition-transform duration-200" onClick={() => setIsOpen(false)}>AI</Link>
           <Link href="/settings" className="p-4 hover:scale-105 transition-transform duration-200" onClick={() => setIsOpen(false)}>Settings</Link>
+          {user ? (
+            <button onClick={() => { signOut(); setIsOpen(false); }} className="p-4 hover:scale-105 transition-transform duration-200">Logout</button>
+          ) : (
+            <Link href="/login" className="p-4 hover:scale-105 transition-transform duration-200" onClick={() => setIsOpen(false)}>Login</Link>
+          )}
           <div className="p-4">
             <ThemeSwitcher />
           </div>

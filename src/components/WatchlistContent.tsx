@@ -1,21 +1,59 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../lib/firebase';
 import { useRealtime } from '../lib/hooks/useRealtime';
 import { WatchlistSkeleton } from './WatchlistSkeleton';
+import { WatchlistItem } from './WatchlistItem';
 
-interface Stock {
+interface WatchlistStock {
   name: string;
-  price: number;
-  movement: 'up' | 'down';
-  change: number;
+  addedAt: number;
 }
 
 interface WatchlistData {
-  stocks: Stock[];
+  stocks: WatchlistStock[];
+}
+
+interface Quote {
+  c: number;
+  d: number;
+  dp: number;
+  h: number;
+  l: number;
+  o: number;
+  pc: number;
+  t: number;
 }
 
 export function WatchlistContent({ userId }: { userId: string }) {
-  const watchlistData = useRealtime<WatchlistData>(`watchlist/${userId}`);
+  const watchlistData = useRealtime<WatchlistData>(`watchlists/${userId}`);
+  const [quotes, setQuotes] = useState<Record<string, Quote>>({});
+
+  useEffect(() => {
+    const fetchQuotes = async () => {
+      if (watchlistData && watchlistData.stocks && watchlistData.stocks.length > 0) {
+        const symbols = watchlistData.stocks.map(stock => stock.name);
+        try {
+          const marketDataProxy = httpsCallable(functions, 'marketDataProxy');
+          const response = await marketDataProxy({
+            source: 'finnhub',
+            endpoint: 'quote',
+            params: { symbols },
+          });
+          setQuotes(response.data as Record<string, Quote>);
+        } catch (error) {
+          console.error('Error fetching quotes:', error);
+        }
+      }
+    };
+
+    fetchQuotes();
+    const interval = setInterval(fetchQuotes, 15000); // Fetch quotes every 15 seconds
+
+    return () => clearInterval(interval);
+  }, [watchlistData]);
 
   return (
     <>
@@ -23,17 +61,11 @@ export function WatchlistContent({ userId }: { userId: string }) {
         watchlistData.stocks && watchlistData.stocks.length > 0 ? (
           <ul className="space-y-4">
             {watchlistData.stocks.map((stock) => (
-              <li key={stock.name} className="flex justify-between items-center p-3 bg-secondary rounded-lg">
-                <span className="font-semibold">{stock.name}</span>
-                <span className="font-mono">${stock.price.toFixed(2)}</span>
-                <span className={`font-semibold ${stock.movement === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-                  {stock.change.toFixed(2)}%
-                </span>
-              </li>
+              <WatchlistItem key={stock.name} symbol={stock.name} quote={quotes[stock.name]} />
             ))}
           </ul>
         ) : (
-          <p className="text-sm opacity-80">Your watchlist is empty.</p>
+          <p className="text-sm opacity-80">Your watchlist is empty. Add symbols to get started.</p>
         )
       ) : (
         <WatchlistSkeleton />

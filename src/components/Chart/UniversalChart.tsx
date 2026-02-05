@@ -68,25 +68,10 @@ export default function UniversalChart() {
   );
 
   const handleAddToWatchlist = () => {
-    if (user && selectedSymbol && candleDataRef.current.length > 0) {
-      const lastCandle = candleDataRef.current[candleDataRef.current.length - 1];
-      const previousCandle = candleDataRef.current[candleDataRef.current.length - 2];
-      const price = lastCandle.close;
-      let change = 0;
-      let movement = 'up';
-
-      if(previousCandle) {
-          change = ((price - previousCandle.close) / previousCandle.close) * 100;
-          if (change < 0) {
-              movement = 'down';
-          }
-      }
-
+    if (user && selectedSymbol) {
       const stock = {
         name: selectedSymbol.symbol,
-        price: price,
-        movement: movement,
-        change: change,
+        addedAt: Date.now(),
       };
       addToWatchlist(user.uid, stock);
     }

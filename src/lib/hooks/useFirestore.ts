@@ -1,26 +1,24 @@
-
 import { db } from "../firebase";
 import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 
 interface Stock {
     name: string;
-    price: number;
-    movement: string;
-    change: number
+    addedAt: number;
 }
 
 export const useFirestore = () => {
   const getUserData = async (uid: string) => {
-    const docRef = doc(db, "users", uid);
-    const snapshot = await getDoc(docRef);
-    return snapshot.exists() ? snapshot.data() : null;
+    const userRef = doc(db, "users", uid);
+    const userDoc = await getDoc(userRef);
+    return userDoc.exists() ? userDoc.data() : null;
   };
 
-  const setUserData = async (uid: string, data: Record<string, unknown>) => {
-    await setDoc(doc(db, "users", uid), data, { merge: true });
+  const setUserData = async (uid: string, data: any) => {
+    const userRef = doc(db, "users", uid);
+    await setDoc(userRef, data, { merge: true });
   };
 
-  const addToWatchlist = async (uid: string, stock: { name: string; price: number; movement: string; change: number }) => {
+  const addToWatchlist = async (uid: string, stock: { name: string; addedAt: number }) => {
     const watchlistRef = doc(db, "watchlists", uid);
     const watchlistDoc = await getDoc(watchlistRef);
     if (!watchlistDoc.exists()) {
