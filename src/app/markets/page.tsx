@@ -53,7 +53,7 @@ function Markets() {
   const { user } = useAuth();
   const { assets, watchlist, topMovers, isLoading, handleToggleWatchlist } = useMarkets();
 
-  const allAssets = useMemo(() => Object.values(assets).flat(), [assets]);
+  const allAssets: any[] = useMemo(() => Object.values(assets).flat(), [assets]);
 
   const filteredAssets = useMemo(() => {
     let currentAssets = activeTab === "watchlist" ? allAssets.filter((a) => watchlist.includes(a.symbol)) : assets[activeTab as keyof typeof assets] || [];

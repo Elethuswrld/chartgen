@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { seedWatchlist } from '../lib/seed';
 
-export function SeedData() {
+export const SeedData: React.FC = () => {
   useEffect(() => {
     seedWatchlist();
   }, []);
 
   return null;
-}
+};

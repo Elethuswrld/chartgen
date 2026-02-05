@@ -51,7 +51,7 @@ const useMarkets = () => {
   const topMovers = useMemo(() => {
     // Calculate top movers from the assets
     return [];
-  }, [assets]);
+  }, []);
 
   const handleToggleWatchlist = (pair: string, isWatchlisted: boolean) => {
     if (!user) return;

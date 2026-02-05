@@ -1,9 +1,16 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from "react";
 
-export function News() {
-  const [news, setNews] = useState([]);
+interface NewsItem {
+  id: number;
+  url: string;
+  headline: string;
+  datetime: number;
+}
+
+export const News: React.FC = () => {
+  const [news, setNews] = useState<NewsItem[]>([]);
 
   useEffect(() => {
     const fetchNews = async () => {

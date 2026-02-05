@@ -1,12 +1,23 @@
-"use client";
+'use client';
 
 import { useAuth } from '../lib/hooks/useAuth';
 import { useRealtime } from '../lib/hooks/useRealtime';
 import { WatchlistSkeleton } from './WatchlistSkeleton';
 
+interface Stock {
+  name: string;
+  price: number;
+  movement: 'up' | 'down';
+  change: number;
+}
+
+interface WatchlistData {
+  stocks: Stock[];
+}
+
 export function Watchlist() {
   const { user } = useAuth();
-  const watchlistData = useRealtime(user ? `watchlist/${user.uid}` : null);
+  const watchlistData = useRealtime<WatchlistData>(user ? `watchlist/${user.uid}` : null);
 
   return (
     <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md">

@@ -1,5 +1,10 @@
 const functions = require("firebase-functions");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const axios = require("axios");
+const admin = require("firebase-admin");
+
+admin.initializeApp();
+const db = admin.firestore();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -37,16 +42,83 @@ REQUEST RULES:
 
 
 exports.geminiProxy = functions.https.onCall(async (data, context) => {
+  // 1. Auth Check
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "You must be logged in to use the AI assistant.");
+  }
+
   const { prompt } = data;
+  const uid = context.auth.uid;
+
+  // 2. Input Validation (simple size check)
+  if (!prompt || typeof prompt !== 'string' || prompt.length > 5000) { // Limit prompt size
+    throw new functions.https.HttpsError("invalid-argument", "The prompt is invalid or too long.");
+  }
+
+  // 3. Rate Limiting
+  const requestsRef = db.collection('users').doc(uid).collection('geminiRequests');
+  const now = admin.firestore.Timestamp.now();
+  const oneMinuteAgo = admin.firestore.Timestamp.fromMillis(now.toMillis() - 60000);
+  const PER_MINUTE_LIMIT = 5;
 
   try {
+    const snapshot = await requestsRef.where('timestamp', '>=', oneMinuteAgo).get();
+    if (snapshot.size >= PER_MINUTE_LIMIT) {
+      throw new functions.https.HttpsError('resource-exhausted', `Rate limit exceeded. Try again in a minute. The limit is ${PER_MINUTE_LIMIT} requests per minute.`);
+    }
+
+    // Log the current request *before* making the external call
+    await requestsRef.add({ timestamp: now });
+
+    // 4. Call Gemini API
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
     return { response: text };
+
   } catch (error) {
-    console.error("Error calling Gemini API:", error);
-    throw new functions.https.HttpsError("internal", "Error calling Gemini API");
+    // Re-throw specific callable errors, otherwise log and throw a generic internal error.
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    console.error("Error in geminiProxy function:", error);
+    throw new functions.https.HttpsError("internal", "An unexpected error occurred while processing your request.");
   }
+});
+
+exports.marketDataProxy = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated", "You must be logged in to access market data.");
+    }
+  
+    const { source, endpoint, params } = data;
+    const finnhubApiKey = process.env.FINNHUB_API_KEY;
+  
+    let url;
+  
+    try {
+      switch (source) {
+        case 'finnhub':
+          const finnHubUrl = new URL(`https://finnhub.io/api/v1/${endpoint}`);
+          finnHubUrl.search = new URLSearchParams(params).toString();
+          finnHubUrl.searchParams.append('token', finnhubApiKey);
+          url = finnHubUrl.toString();
+          break;
+        case 'binance':
+            const binanceUrl = new URL(`https://api.binance.com/api/v3/${endpoint}`);
+            binanceUrl.search = new URLSearchParams(params).toString();
+            url = binanceUrl.toString();
+          break;
+        default:
+          throw new functions.https.HttpsError("invalid-argument", "Invalid data source specified.");
+      }
+  
+      const response = await axios.get(url);
+      return response.data;
+  
+    } catch (error) {
+      console.error(`Error fetching from ${source} proxy:`, error.message);
+      throw new functions.https.HttpsError("internal", `Error fetching data from ${source}.`);
+    }
 });

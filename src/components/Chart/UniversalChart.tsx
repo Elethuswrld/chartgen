@@ -6,7 +6,7 @@ import {
   IChartApi,
   ISeriesApi,
   CandlestickData,
-} from "lightweight-charts/standalone";
+} from "lightweight-charts";
 import { useAuth } from '../../lib/hooks/useAuth';
 import { useFirestore } from '../../lib/hooks/useFirestore';
 import { AIPanel } from "../AIPanel";
@@ -15,7 +15,37 @@ import { functions } from "../../lib/firebase";
 
 type SymbolOption = { symbol: string; type: "crypto" | "stock" | "forex" };
 
-export default function UniversalChart({ finnhubApiKey }: { finnhubApiKey: string }) {
+// Defining interfaces for the data from APIs
+interface FinnhubStock {
+  symbol: string;
+  description: string;
+}
+
+interface BinanceSymbol {
+  symbol: string;
+  status: string;
+}
+
+interface BinanceExchangeInfo {
+  symbols: BinanceSymbol[];
+}
+
+type BinanceKline = [
+    number, // Kline open time
+    string, // Open price
+    string, // High price
+    string, // Low price
+    string, // Close price
+    string, // Volume
+    number, // Kline close time
+    string, // Quote asset volume
+    number, // Number of trades
+    string, // Taker buy base asset volume
+    string, // Taker buy quote asset volume
+    string  // Unused
+];
+
+export default function UniversalChart() {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -92,98 +122,99 @@ export default function UniversalChart({ finnhubApiKey }: { finnhubApiKey: strin
     }
   };
 
-  // Fetch symbols (stocks + crypto)
   useEffect(() => {
     const fetchSymbols = async () => {
       try {
-        const stockRes = await fetch(
-          `https://finnhub.io/api/v1/stock/symbol?exchange=US&token=${finnhubApiKey}`
-        );
-        const stockData = await stockRes.json();
-        const stockSymbols: SymbolOption[] = stockData.map((s: any) => ({
+        const marketDataProxy = httpsCallable(functions, 'marketDataProxy');
+
+        const stockRes = await marketDataProxy({ 
+            source: 'finnhub', 
+            endpoint: 'stock/symbol', 
+            params: { exchange: 'US' } 
+        });
+        const stockData = stockRes.data as FinnhubStock[];
+        const stockSymbols: SymbolOption[] = stockData.map((s: FinnhubStock) => ({
           symbol: s.symbol,
           type: "stock",
         }));
 
-        const binanceRes = await fetch("https://api.binance.com/api/v3/exchangeInfo");
-        const binanceData = await binanceRes.json();
+        const binanceRes = await marketDataProxy({ 
+            source: 'binance', 
+            endpoint: 'exchangeInfo', 
+            params: {} 
+        });
+        const binanceData = binanceRes.data as BinanceExchangeInfo;
         const cryptoSymbols: SymbolOption[] = binanceData.symbols
-          .filter((s: any) => s.status === "TRADING")
-          .map((s: any) => ({ symbol: s.symbol, type: "crypto" }));
+          .filter((s: BinanceSymbol) => s.status === "TRADING")
+          .map((s: BinanceSymbol) => ({ symbol: s.symbol, type: "crypto" }));
 
         const allSymbols = [...stockSymbols, ...cryptoSymbols];
         setSymbols(allSymbols);
-        setSelectedSymbol(allSymbols[0]);
+        if(allSymbols.length > 0) {
+            setSelectedSymbol(allSymbols[0]);
+        }
       } catch (err) {
         console.error("Error fetching symbols:", err);
       }
     };
     fetchSymbols();
-  }, [finnhubApiKey]);
-
-  // Initialize chart
-  useEffect(() => {
-    if (!chartContainerRef.current) return;
-
-    const chart = createChart(chartContainerRef.current, {
-      width: chartContainerRef.current.clientWidth,
-      height: chartContainerRef.current.clientHeight,
-      layout: {
-        background: { type: ColorType.Solid, color: "#0E1424" },
-        textColor: "white",
-      },
-      crosshair: { mode: CrosshairMode.Normal },
-      grid: {
-        vertLines: { color: "rgba(255,255,255,0.05)" },
-        horzLines: { color: "rgba(255,255,255,0.05)" },
-      },
-      rightPriceScale: { visible: true },
-      timeScale: { rightOffset: 10, barSpacing: 10, fixRightEdge: true },
-    });
-
-    chartRef.current = chart;
-
-    candleSeriesRef.current = chart.addCandlestickSeries({
-      upColor: "#22c55e",
-      downColor: "#ef4444",
-      borderUpColor: "#22c55e",
-      borderDownColor: "#ef4444",
-      wickUpColor: "#22c55e",
-      wickDownColor: "#ef4444",
-    });
-
-    const handleResize = () => {
-      chart.applyOptions({
-        width: chartContainerRef.current!.clientWidth,
-        height: chartContainerRef.current!.clientHeight,
-      });
-    };
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      chart.remove();
-    };
   }, []);
 
-  // Fetch candles + live updates
   useEffect(() => {
-    if (!selectedSymbol || !candleSeriesRef.current) return;
+    if (!selectedSymbol) return;
 
+    // Cleanup previous chart and connections
+    if (chartRef.current) {
+      chartRef.current.remove();
+      chartRef.current = null;
+    }
     wsRef.current?.close();
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    // Create a new chart
+    const chart = createChart(chartContainerRef.current!, {
+        width: chartContainerRef.current!.clientWidth,
+        height: chartContainerRef.current!.clientHeight,
+        layout: {
+            background: { type: ColorType.Solid, color: "#0E1424" },
+            textColor: "white",
+        },
+        crosshair: { mode: CrosshairMode.Normal },
+        grid: {
+            vertLines: { color: "rgba(255,255,255,0.05)" },
+            horzLines: { color: "rgba(255,255,255,0.05)" },
+        },
+        rightPriceScale: { visible: true },
+        timeScale: { rightOffset: 10, barSpacing: 10, fixRightEdge: true },
+    });
+    chartRef.current = chart;
+
+    const candleSeries = chart.addCandlestickSeries({
+        upColor: "#22c55e",
+        downColor: "#ef4444",
+        borderUpColor: "#22c55e",
+        borderDownColor: "#ef4444",
+        wickUpColor: "#22c55e",
+        wickDownColor: "#ef4444",
+    });
+    candleSeriesRef.current = candleSeries;
 
     const fetchCandles = async () => {
       candleDataRef.current = [];
       try {
         let data: CandlestickData[] = [];
+        const marketDataProxy = httpsCallable(functions, 'marketDataProxy');
 
         if (selectedSymbol.type === "crypto") {
-          const res = await fetch(
-            `https://api.binance.com/api/v3/klines?symbol=${selectedSymbol.symbol}&interval=1h&limit=100`
-          );
-          const klines = await res.json();
-          data = klines.map((k: any) => ({
+          const res = await marketDataProxy({
+              source: 'binance',
+              endpoint: 'klines',
+              params: { symbol: selectedSymbol.symbol, interval: '1h', limit: 100 }
+          });
+          const klines = res.data as BinanceKline[];
+          data = klines.map((k: BinanceKline) => ({
             time: k[0] / 1000,
             open: parseFloat(k[1]),
             high: parseFloat(k[2]),
@@ -208,10 +239,12 @@ export default function UniversalChart({ finnhubApiKey }: { finnhubApiKey: strin
         } else {
           const now = Math.floor(Date.now() / 1000);
           const oneMonthAgo = now - 30 * 24 * 3600;
-          const res = await fetch(
-            `https://finnhub.io/api/v1/stock/candle?symbol=${selectedSymbol.symbol}&resolution=60&from=${oneMonthAgo}&to=${now}&token=${finnhubApiKey}`
-          );
-          const candles = await res.json();
+          const res = await marketDataProxy({
+              source: 'finnhub',
+              endpoint: 'stock/candle',
+              params: { symbol: selectedSymbol.symbol, resolution: '60', from: oneMonthAgo, to: now }
+          });
+          const candles = res.data as { t: number[], o: number[], h: number[], l: number[], c: number[] };
           if (candles.t) {
             data = candles.t.map((t: number, i: number) => ({
               time: t,
@@ -224,12 +257,17 @@ export default function UniversalChart({ finnhubApiKey }: { finnhubApiKey: strin
 
           intervalRef.current = setInterval(async () => {
             try {
-              const latestRes = await fetch(
-                `https://finnhub.io/api/v1/stock/candle?symbol=${selectedSymbol.symbol}&resolution=60&from=${Math.floor(
-                  Date.now() / 1000 - 3600
-                )}&to=${Math.floor(Date.now() / 1000)}&token=${finnhubApiKey}`
-              );
-              const latest = await latestRes.json();
+                const latestRes = await marketDataProxy({
+                    source: 'finnhub',
+                    endpoint: 'stock/candle',
+                    params: { 
+                        symbol: selectedSymbol.symbol, 
+                        resolution: '60', 
+                        from: Math.floor(Date.now() / 1000 - 7200), // 2 hours back to be safe 
+                        to: Math.floor(Date.now() / 1000) 
+                    }
+                });
+              const latest = latestRes.data as { t: number[], o: number[], h: number[], l: number[], c: number[] };
               if (latest.t?.length) {
                 candleSeriesRef.current?.update({
                   time: latest.t[latest.t.length - 1],
@@ -246,7 +284,8 @@ export default function UniversalChart({ finnhubApiKey }: { finnhubApiKey: strin
         }
 
         candleDataRef.current = data;
-        candleSeriesRef.current.setData(data);
+        candleSeries.setData(data);
+        chart.timeScale().fitContent();
       } catch (err) {
         console.error("Error fetching candles:", err);
       }
@@ -254,11 +293,27 @@ export default function UniversalChart({ finnhubApiKey }: { finnhubApiKey: strin
 
     fetchCandles();
 
-    return () => {
-      wsRef.current?.close();
-      if (intervalRef.current) clearInterval(intervalRef.current);
+    const handleResize = () => {
+        if (chartRef.current) {
+            chartRef.current.applyOptions({
+                width: chartContainerRef.current!.clientWidth,
+                height: chartContainerRef.current!.clientHeight,
+            });
+        }
     };
-  }, [selectedSymbol, finnhubApiKey]);
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (chartRef.current) {
+          chartRef.current.remove();
+      }
+      wsRef.current?.close();
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [selectedSymbol]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

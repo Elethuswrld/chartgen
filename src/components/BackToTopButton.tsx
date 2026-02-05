@@ -1,9 +1,8 @@
-"use client";
-
-import { useEffect, useState } from 'react';
+'use client';
+import React, { useEffect, useState } from 'react';
 import { ArrowUpCircle } from 'lucide-react';
 
-export function BackToTopButton() {
+export const BackToTopButton: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -35,4 +34,4 @@ export function BackToTopButton() {
       <ArrowUpCircle size={24} />
     </button>
   );
-}
+};

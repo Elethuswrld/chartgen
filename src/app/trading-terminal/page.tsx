@@ -55,7 +55,7 @@ export default function TradingTerminal() {
 
         {/* MAIN CHART AREA */}
         <div className="lg:col-span-2 bg-[#0B0F19] border border-white/10 rounded-xl p-5 h-[85vh]">
-          <UniversalChart finnhubApiKey={finnhubApiKey} />
+          <UniversalChart />
         </div>
 
         {/* ORDER PANEL */}

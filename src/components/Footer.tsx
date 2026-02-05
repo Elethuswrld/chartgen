@@ -1,7 +1,9 @@
-export function Footer() {
+import React from 'react';
+
+export const Footer: React.FC = () => {
   return (
     <footer className="bg-secondary text-secondary-foreground p-4 text-center">
       <p>&copy; 2024 ChartGen. All rights reserved.</p>
     </footer>
   );
-}
+};

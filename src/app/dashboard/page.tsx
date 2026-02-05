@@ -15,7 +15,7 @@ export default function Home() {
         {/* ------------------------- */}
         <div className="lg:col-span-2">
           <div className="bg-[#0B0F19] rounded-2xl p-6 shadow-lg border border-white/5 h-[360px] flex items-center justify-center text-gray-500">
-            <UniversalChart finnhubApiKey={process.env.NEXT_PUBLIC_FINNHUB_API_KEY || ""} />
+            <UniversalChart />
           </div>
 
           {/* Spacing for alignment below */}

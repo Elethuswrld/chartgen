@@ -1,4 +1,6 @@
-export function WatchlistSkeleton() {
+import React from 'react';
+
+export const WatchlistSkeleton: React.FC = () => {
   return (
     <div className="space-y-2">
       <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded animate-pulse"></div>
@@ -6,4 +8,4 @@ export function WatchlistSkeleton() {
       <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded animate-pulse"></div>
     </div>
   );
-}
+};

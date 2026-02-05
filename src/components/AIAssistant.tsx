@@ -1,4 +1,6 @@
-export function AIAssistant() {
+import React from 'react';
+
+export const AIAssistant: React.FC = () => {
   return (
     <div className="bg-card text-card-foreground p-4 rounded-lg">
       <h2 className="text-lg font-bold mb-4">AI Assistant</h2>
@@ -8,4 +10,4 @@ export function AIAssistant() {
       <input type="text" placeholder="Ask a question..." className="w-full bg-input text-foreground p-2 rounded-lg" suppressHydrationWarning />
     </div>
   );
-}
+};

@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
 import Link from 'next/link';
 import { ThemeSwitcher } from './ThemeSwitcher';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
-export function Header() {
+export const Header: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -40,4 +40,4 @@ export function Header() {
       )}
     </header>
   );
-}
+};

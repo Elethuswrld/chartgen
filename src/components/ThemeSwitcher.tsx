@@ -1,9 +1,10 @@
-"use client";
+'use client';
 
 import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
+import React from "react";
 
-export function ThemeSwitcher() {
+export const ThemeSwitcher: React.FC = () => {
   const { theme, setTheme } = useTheme();
 
   return (

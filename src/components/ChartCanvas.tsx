@@ -1,4 +1,6 @@
-export function ChartCanvas() {
+import React from 'react';
+
+export const ChartCanvas: React.FC = () => {
   return (
     <div className="bg-card text-card-foreground p-4 rounded-lg">
       <h2 className="text-lg font-bold mb-4">Chart</h2>
@@ -7,4 +9,4 @@ export function ChartCanvas() {
       </div>
     </div>
   );
-}
+};

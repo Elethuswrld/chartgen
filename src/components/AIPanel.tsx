@@ -1,10 +1,46 @@
 import React from 'react';
 
-export const AIPanel = ({ aiResponse, isLoading, onExplain, onGeneratePlan, onGetTrend }) => {
+interface TradePlan {
+  trigger: string;
+  entry: string;
+  sl: string;
+  tp1: string;
+  tp2: string;
+  rr: string;
+  invalidation: string;
+}
+
+interface AIAnalysisResponse {
+  summary: string;
+  trend: {
+    structure: string;
+    bias: string;
+    flip: string;
+  };
+  levels: {
+    support: string[];
+    resistance: string[];
+  };
+  plan: {
+    long: TradePlan;
+    short: TradePlan;
+  };
+  risk_note: string;
+}
+
+interface AIPanelProps {
+  aiResponse: string;
+  isLoading: boolean;
+  onExplain: () => void;
+  onGeneratePlan: () => void;
+  onGetTrend: () => void;
+}
+
+export const AIPanel: React.FC<AIPanelProps> = ({ aiResponse, isLoading, onExplain, onGeneratePlan, onGetTrend }) => {
 
   const renderJsonResponse = () => {
     try {
-      const data = JSON.parse(aiResponse);
+      const data: AIAnalysisResponse = JSON.parse(aiResponse);
       return (
         <div>
             {data.summary && <p><strong>Summary:</strong> {data.summary}</p>}
@@ -75,7 +111,7 @@ export const AIPanel = ({ aiResponse, isLoading, onExplain, onGeneratePlan, onGe
           disabled={isLoading}
           className="w-full text-left p-3 bg-[#0E1424] rounded-lg border border-white/10 hover:bg-white/5 transition"
         >
-          What's the trend?
+          What&apos;s the trend?
         </button>
       </div>
       {isLoading && <div className="mt-4">Loading...</div>}

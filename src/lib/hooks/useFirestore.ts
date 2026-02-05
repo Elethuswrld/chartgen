@@ -2,6 +2,13 @@
 import { db } from "../firebase";
 import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 
+interface Stock {
+    name: string;
+    price: number;
+    movement: string;
+    change: number
+}
+
 export const useFirestore = () => {
   const getUserData = async (uid: string) => {
     const docRef = doc(db, "users", uid);
@@ -29,7 +36,7 @@ export const useFirestore = () => {
     const watchlistDoc = await getDoc(watchlistRef);
     if (watchlistDoc.exists()) {
       const watchlistData = watchlistDoc.data();
-      const stockToRemove = watchlistData.stocks.find((stock: any) => stock.name === stockName);
+      const stockToRemove = watchlistData.stocks.find((stock: Stock) => stock.name === stockName);
       if (stockToRemove) {
         await updateDoc(watchlistRef, {
           stocks: arrayRemove(stockToRemove),
