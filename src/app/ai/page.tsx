@@ -13,6 +13,13 @@ export default function AI() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (!functions) {
+      setResponse("Firebase is not configured. Check Vercel env vars.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const geminiProxy = httpsCallable(functions, 'geminiProxy');
       const result = await geminiProxy({ prompt });

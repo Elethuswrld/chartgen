@@ -25,6 +25,7 @@ const seedData = {
 };
 
 export const seedWatchlist = async () => {
+  if (!db) return;
   try {
     await setDoc(doc(db, 'watchlist/user-default'), seedData);
     console.log('Watchlist data seeded successfully!');

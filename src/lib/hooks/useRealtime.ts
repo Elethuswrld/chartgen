@@ -6,7 +6,7 @@ export function useRealtime<T>(path: string) {
   const [data, setData] = useState<T | null>(null);
 
   useEffect(() => {
-    if (!path) return;
+    if (!path || !db) return;
 
     const docRef = doc(db, path);
 

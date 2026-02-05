@@ -35,6 +35,10 @@ export function WatchlistContent({ userId }: { userId: string }) {
     const fetchQuotes = async () => {
       if (watchlistData && watchlistData.stocks && watchlistData.stocks.length > 0) {
         const symbols = watchlistData.stocks.map(stock => stock.name);
+        if (!functions) {
+          console.error("Firebase is not configured. Check env vars.");
+          return;
+        }
         try {
           const marketDataProxy = httpsCallable(functions, 'marketDataProxy');
           const response = await marketDataProxy({

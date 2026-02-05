@@ -83,6 +83,11 @@ export default function UniversalChart() {
       return;
     }
 
+    if (!functions) {
+      setAiResponse("Firebase is not configured. Check Vercel env vars.");
+      return;
+    }
+
     setIsLoading(true);
     setAiResponse('');
 
@@ -112,6 +117,10 @@ export default function UniversalChart() {
 
   useEffect(() => {
     const fetchSymbols = async () => {
+      if (!functions) {
+        console.error("Firebase is not configured. Check env vars.");
+        return;
+      }
       try {
         const marketDataProxy = httpsCallable(functions, 'marketDataProxy');
 
@@ -190,6 +199,10 @@ export default function UniversalChart() {
     candleSeriesRef.current = candleSeries;
 
     const fetchCandles = async () => {
+      if (!functions) {
+        console.error("Firebase is not configured. Check env vars.");
+        return;
+      }
       candleDataRef.current = [];
       try {
         let data: CandlestickData<UTCTimestamp>[] = [];
@@ -244,6 +257,10 @@ export default function UniversalChart() {
           }
 
           intervalRef.current = setInterval(async () => {
+            if (!functions) {
+              console.error("Firebase is not configured. Check env vars.");
+              return;
+            }
             try {
                 const latestRes = await marketDataProxy({
                     source: 'finnhub',

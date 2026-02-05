@@ -8,17 +8,20 @@ interface Stock {
 
 export const useFirestore = () => {
   const getUserData = async (uid: string) => {
+    if (!db) return null;
     const userRef = doc(db, "users", uid);
     const userDoc = await getDoc(userRef);
     return userDoc.exists() ? userDoc.data() : null;
   };
 
   const setUserData = async (uid: string, data: any) => {
+    if (!db) return;
     const userRef = doc(db, "users", uid);
     await setDoc(userRef, data, { merge: true });
   };
 
   const addToWatchlist = async (uid: string, stock: { name: string; addedAt: number }) => {
+    if (!db) return;
     const watchlistRef = doc(db, "watchlists", uid);
     const watchlistDoc = await getDoc(watchlistRef);
     if (!watchlistDoc.exists()) {
@@ -30,6 +33,7 @@ export const useFirestore = () => {
   };
 
   const removeFromWatchlist = async (uid: string, stockName: string) => {
+    if (!db) return;
     const watchlistRef = doc(db, "watchlists", uid);
     const watchlistDoc = await getDoc(watchlistRef);
     if (watchlistDoc.exists()) {

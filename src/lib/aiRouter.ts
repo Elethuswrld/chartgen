@@ -2,6 +2,10 @@ import { httpsCallable, HttpsCallableResult } from "firebase/functions";
 import { functions } from "./firebase";
 
 export const askAI = async (prompt: string, model: "gemini" | "gpt" | "claude" = "gemini") => {
+  if (!functions) {
+    return "Firebase is not configured. Check env vars.";
+  }
+
   const fnName =
     model === "gpt"
       ? "openAIProxy"
