@@ -16,10 +16,11 @@ export default function AI() {
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, model: "gpt" }),
       });
       const data = await res.json();
-      setResponse(data.text);
+      if (!res.ok) throw new Error(data?.error ?? "AI request failed");
+      setResponse(data.text ?? "");
     } catch (error) { 
       console.error('Error calling AI API:', error);
       setResponse('Error: Could not get a response from the AI.');
