@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function SettingsPage() {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export default function SettingsPage() {
         <div>
           <p className="mb-4">Welcome, {user.displayName}!</p>
           <button
-            onClick={signOut}
+            onClick={logout}
             className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
           >
             Logout
