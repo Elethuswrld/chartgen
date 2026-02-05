@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import {
   createChart,
@@ -10,13 +11,11 @@ import {
 } from "lightweight-charts";
 import { useAuth } from '../../lib/hooks/useAuth';
 import { useFirestore } from '../../lib/hooks/useFirestore';
+import { useAI } from '../../lib/hooks/useAI';
 import { AIPanel } from "../AIPanel";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../../lib/firebase";
 
 type SymbolOption = { symbol: string; type: "crypto" | "stock" | "forex" };
 
-// Defining interfaces for the data from APIs
 interface FinnhubStock {
   symbol: string;
   description: string;
@@ -61,7 +60,7 @@ export default function UniversalChart() {
   const { user } = useAuth();
   const { addToWatchlist } = useFirestore();
   const [aiResponse, setAiResponse] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { queryAI, loading: isAILoading, model, setModel } = useAI();
 
   const filteredSymbols = symbols.filter((s) =>
     s.symbol.toLowerCase().includes(searchTerm.toLowerCase())
@@ -83,17 +82,8 @@ export default function UniversalChart() {
       return;
     }
 
-    if (!functions) {
-      setAiResponse("Firebase is not configured. Check Vercel env vars.");
-      return;
-    }
-
-    setIsLoading(true);
     setAiResponse('');
-
-    const geminiProxy = httpsCallable(functions, 'geminiProxy');
     const ohlc = candleDataRef.current.slice(-20);
-
     const promptPayload = {
       symbol: selectedSymbol.symbol,
       timeframe: '1h',
@@ -101,46 +91,37 @@ export default function UniversalChart() {
       request: request,
     };
 
-    try {
-      const result = await geminiProxy({ prompt: JSON.stringify(promptPayload) });
-      const rawResponse = (result.data as { response: string }).response;
-      const cleanedJsonString = rawResponse.replace(/```json\n?|\n?```/g, '');
-      const parsedResponse = JSON.parse(cleanedJsonString);
-      setAiResponse(JSON.stringify(parsedResponse, null, 2));
-    } catch (error) {
-      console.error("Error calling geminiProxy function:", error);
-      setAiResponse("Error getting response from AI.");
-    } finally {
-        setIsLoading(false);
-    }
+    const response = await queryAI(JSON.stringify(promptPayload));
+    setAiResponse(response);
   };
 
   useEffect(() => {
     const fetchSymbols = async () => {
-      if (!functions) {
-        console.error("Firebase is not configured. Check env vars.");
-        return;
-      }
       try {
-        const marketDataProxy = httpsCallable(functions, 'marketDataProxy');
-
-        const stockRes = await marketDataProxy({ 
-            source: 'finnhub', 
-            endpoint: 'stock/symbol', 
-            params: { exchange: 'US' } 
+        const stockRes = await fetch("/api/marketdata", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                provider: "finnhub",
+                action: "stock_symbols",
+                params: { exchange: "US" },
+            }),
         });
-        const stockData = stockRes.data as FinnhubStock[];
+        const stockData: FinnhubStock[] = await stockRes.json();
         const stockSymbols: SymbolOption[] = stockData.map((s: FinnhubStock) => ({
           symbol: s.symbol,
           type: "stock",
         }));
 
-        const binanceRes = await marketDataProxy({ 
-            source: 'binance', 
-            endpoint: 'exchangeInfo', 
-            params: {} 
+        const binanceRes = await fetch("/api/marketdata", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                provider: "binance",
+                action: "exchange_info",
+            }),
         });
-        const binanceData = binanceRes.data as BinanceExchangeInfo;
+        const binanceData: BinanceExchangeInfo = await binanceRes.json();
         const cryptoSymbols: SymbolOption[] = binanceData.symbols
           .filter((s: BinanceSymbol) => s.status === "TRADING")
           .map((s: BinanceSymbol) => ({ symbol: s.symbol, type: "crypto" }));
@@ -160,7 +141,6 @@ export default function UniversalChart() {
   useEffect(() => {
     if (!selectedSymbol) return;
 
-    // Cleanup previous chart and connections
     if (chartRef.current) {
       chartRef.current.remove();
       chartRef.current = null;
@@ -170,7 +150,6 @@ export default function UniversalChart() {
       clearInterval(intervalRef.current);
     }
 
-    // Create a new chart
     const chart = createChart(chartContainerRef.current!, {
         width: chartContainerRef.current!.clientWidth,
         height: chartContainerRef.current!.clientHeight,
@@ -199,22 +178,20 @@ export default function UniversalChart() {
     candleSeriesRef.current = candleSeries;
 
     const fetchCandles = async () => {
-      if (!functions) {
-        console.error("Firebase is not configured. Check env vars.");
-        return;
-      }
       candleDataRef.current = [];
       try {
         let data: CandlestickData<UTCTimestamp>[] = [];
-        const marketDataProxy = httpsCallable(functions, 'marketDataProxy');
-
         if (selectedSymbol.type === "crypto") {
-          const res = await marketDataProxy({
-              source: 'binance',
-              endpoint: 'klines',
-              params: { symbol: selectedSymbol.symbol, interval: '1h', limit: 100 }
+          const res = await fetch("/api/marketdata", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                provider: "binance",
+                action: "klines",
+                params: { symbol: selectedSymbol.symbol, interval: "1h", limit: 100 },
+            }),
           });
-          const klines = res.data as BinanceKline[];
+          const klines: BinanceKline[] = await res.json();
           data = klines.map((k: BinanceKline) => ({
             time: toUTCTimestamp(k[0]),
             open: parseFloat(k[1]),
@@ -240,12 +217,16 @@ export default function UniversalChart() {
         } else {
           const now = Math.floor(Date.now() / 1000);
           const oneMonthAgo = now - 30 * 24 * 3600;
-          const res = await marketDataProxy({
-              source: 'finnhub',
-              endpoint: 'stock/candle',
-              params: { symbol: selectedSymbol.symbol, resolution: '60', from: oneMonthAgo, to: now }
+          const res = await fetch("/api/marketdata", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                provider: "finnhub",
+                action: "stock_candles",
+                params: { symbol: selectedSymbol.symbol, resolution: "60", from: oneMonthAgo, to: now },
+            }),
           });
-          const candles = res.data as { t: number[], o: number[], h: number[], l: number[], c: number[] };
+          const candles = await res.json();
           if (candles.t) {
             data = candles.t.map((t: number, i: number) => ({
               time: t as UTCTimestamp,
@@ -257,22 +238,17 @@ export default function UniversalChart() {
           }
 
           intervalRef.current = setInterval(async () => {
-            if (!functions) {
-              console.error("Firebase is not configured. Check env vars.");
-              return;
-            }
             try {
-                const latestRes = await marketDataProxy({
-                    source: 'finnhub',
-                    endpoint: 'stock/candle',
-                    params: { 
-                        symbol: selectedSymbol.symbol, 
-                        resolution: '60', 
-                        from: Math.floor(Date.now() / 1000 - 7200), // 2 hours back to be safe 
-                        to: Math.floor(Date.now() / 1000) 
-                    }
+                const latestRes = await fetch("/api/marketdata", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        provider: "finnhub",
+                        action: "stock_candles",
+                        params: { symbol: selectedSymbol.symbol, resolution: "60", from: Math.floor(Date.now() / 1000) - 7200, to: Math.floor(Date.now() / 1000) },
+                    }),
                 });
-              const latest = latestRes.data as { t: number[], o: number[], h: number[], l: number[], c: number[] };
+                const latest = await latestRes.json();
               if (latest.t?.length) {
                 candleSeriesRef.current?.update({
                   time: latest.t[latest.t.length - 1] as UTCTimestamp,
@@ -349,10 +325,12 @@ export default function UniversalChart() {
         <div>
             <AIPanel
                 aiResponse={aiResponse}
-                isLoading={isLoading}
+                isLoading={isAILoading}
                 onExplain={() => getAIResponse("explain_move")}
                 onGeneratePlan={() => getAIResponse("trade_plan")}
                 onGetTrend={() => getAIResponse("trend")}
+                model={model}
+                onModelChange={setModel}
             />
         </div>
     </div>

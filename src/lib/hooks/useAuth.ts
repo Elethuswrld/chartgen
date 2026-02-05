@@ -1,26 +1,35 @@
+'use client';
 
-import { useState, useEffect } from "react";
-import { auth } from "../firebase";
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User } from "firebase/auth";
+import { useEffect, useState } from 'react';
+import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { auth } from '../firebase/client';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    if (!auth) return;
-    const unsubscribe = onAuthStateChanged(auth, setUser);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+    });
+
     return () => unsubscribe();
   }, []);
 
   const loginWithGoogle = async () => {
-    if (!auth) return;
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Error logging in with Google: ", error);
+    }
   };
 
   const logout = async () => {
-    if (!auth) return;
-    await signOut(auth);
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error logging out: ", error);
+    }
   };
 
   return { user, loginWithGoogle, logout };

@@ -34,9 +34,11 @@ interface AIPanelProps {
   onExplain: () => void;
   onGeneratePlan: () => void;
   onGetTrend: () => void;
+  model: 'gpt' | 'deepseek';
+  onModelChange: (model: 'gpt' | 'deepseek') => void;
 }
 
-export const AIPanel: React.FC<AIPanelProps> = ({ aiResponse, isLoading, onExplain, onGeneratePlan, onGetTrend }) => {
+export const AIPanel: React.FC<AIPanelProps> = ({ aiResponse, isLoading, onExplain, onGeneratePlan, onGetTrend, model, onModelChange }) => {
 
   const renderJsonResponse = () => {
     try {
@@ -91,7 +93,21 @@ export const AIPanel: React.FC<AIPanelProps> = ({ aiResponse, isLoading, onExpla
   return (
     <div className="bg-[#0B0F19] border border-white/10 rounded-xl p-5">
       <h2 className="text-xl font-bold mb-4">AI Assistant</h2>
-      <div className="space-y-4">
+      <div className="mt-4">
+        <label htmlFor="model-select" className="block text-sm font-medium text-gray-300 mb-2">
+          Select AI Model
+        </label>
+        <select
+          id="model-select"
+          value={model}
+          onChange={(e) => onModelChange(e.target.value as 'gpt' | 'deepseek')}
+          className="w-full p-2 bg-[#0E1424] rounded-lg border border-white/10"
+        >
+          <option value="gpt">GPT-4</option>
+          <option value="deepseek">DeepSeek</option>
+        </select>
+      </div>
+      <div className="space-y-4 mt-4">
         <button
           onClick={onExplain}
           disabled={isLoading}

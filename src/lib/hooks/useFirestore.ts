@@ -1,51 +1,17 @@
-import { db } from "../firebase";
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+'use client';
+
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase/client';
 
 interface Stock {
-    name: string;
-    addedAt: number;
+  name: string;
+  addedAt: number;
 }
 
 export const useFirestore = () => {
-  const getUserData = async (uid: string) => {
-    if (!db) return null;
-    const userRef = doc(db, "users", uid);
-    const userDoc = await getDoc(userRef);
-    return userDoc.exists() ? userDoc.data() : null;
+  const addToWatchlist = async (userId: string, stock: Stock) => {
+    await setDoc(doc(db, 'watchlists', userId, 'stocks', stock.name), stock, { merge: true });
   };
 
-  const setUserData = async (uid: string, data: any) => {
-    if (!db) return;
-    const userRef = doc(db, "users", uid);
-    await setDoc(userRef, data, { merge: true });
-  };
-
-  const addToWatchlist = async (uid: string, stock: { name: string; addedAt: number }) => {
-    if (!db) return;
-    const watchlistRef = doc(db, "watchlists", uid);
-    const watchlistDoc = await getDoc(watchlistRef);
-    if (!watchlistDoc.exists()) {
-        await setDoc(watchlistRef, { stocks: [] });
-    }
-    await updateDoc(watchlistRef, {
-      stocks: arrayUnion(stock),
-    });
-  };
-
-  const removeFromWatchlist = async (uid: string, stockName: string) => {
-    if (!db) return;
-    const watchlistRef = doc(db, "watchlists", uid);
-    const watchlistDoc = await getDoc(watchlistRef);
-    if (watchlistDoc.exists()) {
-      const watchlistData = watchlistDoc.data();
-      const stockToRemove = watchlistData.stocks.find((stock: Stock) => stock.name === stockName);
-      if (stockToRemove) {
-        await updateDoc(watchlistRef, {
-          stocks: arrayRemove(stockToRemove),
-        });
-      }
-    }
-  };
-
-  return { getUserData, setUserData, addToWatchlist, removeFromWatchlist };
+  return { addToWatchlist };
 };

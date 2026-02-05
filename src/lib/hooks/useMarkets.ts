@@ -13,13 +13,13 @@ const useMarkets = () => {
     const fetchAssets = async () => {
       setIsLoading(true);
       try {
-        const stockRes = await fetch(`https://finnhub.io/api/v1/stock/symbol?exchange=US&token=${process.env.NEXT_PUBLIC_FINNHUB_API_KEY}`);
+        const stockRes = await fetch(`/api/marketdata?endpoint=/stock/symbol&exchange=US`);
         const stockData = await stockRes.json();
 
         const cryptoRes = await fetch('https://api.binance.com/api/v3/exchangeInfo');
         const cryptoData = await cryptoRes.json();
 
-        const forexRes = await fetch(`https://finnhub.io/api/v1/forex/symbol?exchange=oanda&token=${process.env.NEXT_PUBLIC_FINNHUB_API_KEY}`);
+        const forexRes = await fetch(`/api/marketdata?endpoint=/forex/symbol&exchange=oanda`);
         const forexData = await forexRes.json();
 
         // To keep the UI from being cluttered, we'll only show a subset of the data

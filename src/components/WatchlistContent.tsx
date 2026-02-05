@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../lib/firebase';
 import { useRealtime } from '../lib/hooks/useRealtime';
 import { WatchlistSkeleton } from './WatchlistSkeleton';
 import { WatchlistItem } from './WatchlistItem';
@@ -33,20 +31,20 @@ export function WatchlistContent({ userId }: { userId: string }) {
 
   useEffect(() => {
     const fetchQuotes = async () => {
-      if (watchlistData && watchlistData.stocks && watchlistData.stocks.length > 0) {
+      if (watchlistData?.stocks?.length) {
         const symbols = watchlistData.stocks.map(stock => stock.name);
-        if (!functions) {
-          console.error("Firebase is not configured. Check env vars.");
-          return;
-        }
         try {
-          const marketDataProxy = httpsCallable(functions, 'marketDataProxy');
-          const response = await marketDataProxy({
-            source: 'finnhub',
-            endpoint: 'quote',
-            params: { symbols },
+          const res = await fetch("/api/marketdata", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              provider: "finnhub",
+              action: "quote_batch",
+              params: { symbols },
+            }),
           });
-          setQuotes(response.data as Record<string, Quote>);
+          const data = await res.json();
+          setQuotes(data);
         } catch (error) {
           console.error('Error fetching quotes:', error);
         }

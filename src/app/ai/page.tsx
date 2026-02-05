@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../../lib/firebase';
 import ReactMarkdown from 'react-markdown';
 
 export default function AI() {
@@ -14,18 +12,16 @@ export default function AI() {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!functions) {
-      setResponse("Firebase is not configured. Check Vercel env vars.");
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const geminiProxy = httpsCallable(functions, 'geminiProxy');
-      const result = await geminiProxy({ prompt });
-      setResponse(result.data as string);
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json();
+      setResponse(data.text);
     } catch (error) { 
-      console.error('Error calling Gemini API:', error);
+      console.error('Error calling AI API:', error);
       setResponse('Error: Could not get a response from the AI.');
     } finally {
       setIsLoading(false);
