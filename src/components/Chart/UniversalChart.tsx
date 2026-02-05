@@ -27,6 +27,8 @@ export default function UniversalChart({ finnhubApiKey }: { finnhubApiKey: strin
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const { user } = useAuth();
   const { addToWatchlist } = useFirestore();
+  const [aiResponse, setAiResponse] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const filteredSymbols = symbols.filter((s) =>
     s.symbol.toLowerCase().includes(searchTerm.toLowerCase())
@@ -57,26 +59,36 @@ export default function UniversalChart({ finnhubApiKey }: { finnhubApiKey: strin
     }
   };
 
-  const getAIResponse = async (promptType: string) => {
-    if (!selectedSymbol) return "Please select a symbol first.";
+  const getAIResponse = async (request: "explain_move" | "trade_plan" | "trend") => {
+    if (!selectedSymbol) {
+      setAiResponse("Please select a symbol first.");
+      return;
+    }
+
+    setIsLoading(true);
+    setAiResponse('');
 
     const geminiProxy = httpsCallable(functions, 'geminiProxy');
     const ohlc = candleDataRef.current.slice(-20);
-    const prompt = `
-      Symbol: ${selectedSymbol.symbol}
-      Timeframe: 1h
-      Recent OHLC: ${JSON.stringify(ohlc)}
 
-      Please provide a response for the following request: ${promptType}
-    `;
+    const promptPayload = {
+      symbol: selectedSymbol.symbol,
+      timeframe: '1h',
+      ohlc: ohlc,
+      request: request,
+    };
 
     try {
-      const result = await geminiProxy({ prompt });
-      const data = result.data as { response: string };
-      return data.response;
+      const result = await geminiProxy({ prompt: JSON.stringify(promptPayload) });
+      const rawResponse = (result.data as { response: string }).response;
+      const cleanedJsonString = rawResponse.replace(/```json\n?|\n?```/g, '');
+      const parsedResponse = JSON.parse(cleanedJsonString);
+      setAiResponse(JSON.stringify(parsedResponse, null, 2));
     } catch (error) {
       console.error("Error calling geminiProxy function:", error);
-      return "Error getting response from AI.";
+      setAiResponse("Error getting response from AI.");
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -276,9 +288,11 @@ export default function UniversalChart({ finnhubApiKey }: { finnhubApiKey: strin
         </div>
         <div>
             <AIPanel
-                onExplain={() => getAIResponse("Explain this move")}
-                onGeneratePlan={() => getAIResponse("Generate trade plan")}
-                onGetTrend={() => getAIResponse("What's the trend?")}
+                aiResponse={aiResponse}
+                isLoading={isLoading}
+                onExplain={() => getAIResponse("explain_move")}
+                onGeneratePlan={() => getAIResponse("trade_plan")}
+                onGetTrend={() => getAIResponse("trend")}
             />
         </div>
     </div>
