@@ -17,7 +17,7 @@ interface WatchlistData {
 
 export function Watchlist() {
   const { user } = useAuth();
-  const watchlistData = useRealtime<WatchlistData>(user ? `watchlist/${user.uid}` : null);
+  const watchlistData = useRealtime<WatchlistData>(user ? `watchlist/${user.uid}` : ``);
 
   return (
     <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md">

@@ -6,6 +6,7 @@ import {
   IChartApi,
   ISeriesApi,
   CandlestickData,
+  UTCTimestamp,
 } from "lightweight-charts";
 import { useAuth } from '../../lib/hooks/useAuth';
 import { useFirestore } from '../../lib/hooks/useFirestore';
@@ -52,7 +53,7 @@ export default function UniversalChart() {
   const [symbols, setSymbols] = useState<SymbolOption[]>([]);
   const [selectedSymbol, setSelectedSymbol] = useState<SymbolOption | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const candleDataRef = useRef<CandlestickData[]>([]);
+  const candleDataRef = useRef<CandlestickData<UTCTimestamp>[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const { user } = useAuth();
@@ -204,7 +205,7 @@ export default function UniversalChart() {
     const fetchCandles = async () => {
       candleDataRef.current = [];
       try {
-        let data: CandlestickData[] = [];
+        let data: CandlestickData<UTCTimestamp>[] = [];
         const marketDataProxy = httpsCallable(functions, 'marketDataProxy');
 
         if (selectedSymbol.type === "crypto") {
@@ -215,7 +216,7 @@ export default function UniversalChart() {
           });
           const klines = res.data as BinanceKline[];
           data = klines.map((k: BinanceKline) => ({
-            time: k[0] / 1000,
+            time: (k[0] / 1000) as UTCTimestamp,
             open: parseFloat(k[1]),
             high: parseFloat(k[2]),
             low: parseFloat(k[3]),
@@ -229,7 +230,7 @@ export default function UniversalChart() {
             const msg = JSON.parse(event.data);
             const k = msg.k;
             candleSeriesRef.current?.update({
-              time: k.t / 1000,
+              time: (k.t / 1000) as UTCTimestamp,
               open: parseFloat(k.o),
               high: parseFloat(k.h),
               low: parseFloat(k.l),
@@ -247,7 +248,7 @@ export default function UniversalChart() {
           const candles = res.data as { t: number[], o: number[], h: number[], l: number[], c: number[] };
           if (candles.t) {
             data = candles.t.map((t: number, i: number) => ({
-              time: t,
+              time: t as UTCTimestamp,
               open: candles.o[i],
               high: candles.h[i],
               low: candles.l[i],
@@ -270,7 +271,7 @@ export default function UniversalChart() {
               const latest = latestRes.data as { t: number[], o: number[], h: number[], l: number[], c: number[] };
               if (latest.t?.length) {
                 candleSeriesRef.current?.update({
-                  time: latest.t[latest.t.length - 1],
+                  time: latest.t[latest.t.length - 1] as UTCTimestamp,
                   open: latest.o[latest.o.length - 1],
                   high: latest.h[latest.h.length - 1],
                   low: latest.l[latest.l.length - 1],
