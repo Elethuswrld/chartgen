@@ -216,7 +216,7 @@ export default function UniversalChart() {
           });
           const klines = res.data as BinanceKline[];
           data = klines.map((k: BinanceKline) => ({
-            time: (k[0] / 1000) as UTCTimestamp,
+            time: Math.floor(k[0] / 1000) as UTCTimestamp,
             open: parseFloat(k[1]),
             high: parseFloat(k[2]),
             low: parseFloat(k[3]),
@@ -230,7 +230,7 @@ export default function UniversalChart() {
             const msg = JSON.parse(event.data);
             const k = msg.k;
             candleSeriesRef.current?.update({
-              time: (k.t / 1000) as UTCTimestamp,
+              time: Math.floor(k.t / 1000) as UTCTimestamp,
               open: parseFloat(k.o),
               high: parseFloat(k.h),
               low: parseFloat(k.l),

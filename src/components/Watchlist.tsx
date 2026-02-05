@@ -17,7 +17,17 @@ interface WatchlistData {
 
 export function Watchlist() {
   const { user } = useAuth();
-  const watchlistData = useRealtime<WatchlistData>(user ? `watchlist/${user.uid}` : ``);
+
+  if (!user) {
+    return (
+      <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md">
+        <h2 className="text-xl font-bold mb-4">Watchlist</h2>
+        <p className="text-sm opacity-80">Log in to view your watchlist.</p>
+      </div>
+    );
+  }
+
+  const watchlistData = useRealtime<WatchlistData>(`watchlist/${user.uid}`);
 
   return (
     <div className="bg-card text-card-foreground p-4 rounded-lg shadow-md">
