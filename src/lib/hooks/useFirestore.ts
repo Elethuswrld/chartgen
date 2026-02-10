@@ -1,7 +1,7 @@
 'use client';
 
-import { db } from "../firebase/client";
 import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { db } from "../firebase/client";
 
 type Stock = { name: string; addedAt: number };
 
