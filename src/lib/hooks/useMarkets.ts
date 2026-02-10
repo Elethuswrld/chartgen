@@ -9,25 +9,42 @@ const useMarkets = () => {
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const postMarket = async (provider: "finnhub" | "binance", action: string, params?: Record<string, any>) => {
+    const res = await fetch("/api/marketdata", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ provider, action, params }),
+    });
+  
+    const text = await res.text();
+    let data: any = null;
+  
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      throw new Error(`Invalid JSON from /api/marketdata (status ${res.status})`);
+    }
+  
+    if (!res.ok) {
+      throw new Error(data?.error ?? `marketdata ${res.status}`);
+    }
+  
+    return data;
+  };
+
   useEffect(() => {
     const fetchAssets = async () => {
       setIsLoading(true);
       try {
-        const stockRes = await fetch(`/api/marketdata?endpoint=/stock/symbol&exchange=US`);
-        const stockData = await stockRes.json();
+        const stockData = await postMarket("finnhub", "stock_symbols", { exchange: "US" });
+        const forexData = await postMarket("finnhub", "forex_symbols", { exchange: "oanda" });
+        const binanceData = await postMarket("binance", "exchange_info");
 
-        const cryptoRes = await fetch('https://api.binance.com/api/v3/exchangeInfo');
-        const cryptoData = await cryptoRes.json();
-
-        const forexRes = await fetch(`/api/marketdata?endpoint=/forex/symbol&exchange=oanda`);
-        const forexData = await forexRes.json();
-
-        // To keep the UI from being cluttered, we'll only show a subset of the data
         setAssets({
-          stocks: stockData.slice(0, 100),
-          crypto: cryptoData.symbols.slice(0, 100),
-          forex: forexData.slice(0, 100),
-          commodities: [], // Placeholder for commodities data
+          stocks: Array.isArray(stockData) ? stockData.slice(0, 100) : [],
+          forex: Array.isArray(forexData) ? forexData.slice(0, 100) : [],
+          crypto: Array.isArray(binanceData?.symbols) ? binanceData.symbols.slice(0, 100) : [],
+          commodities: [],
         });
       } catch (error) {
         console.error("Error fetching assets:", error);

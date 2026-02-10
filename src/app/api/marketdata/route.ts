@@ -1,6 +1,13 @@
 import "server-only";
 import { NextResponse } from "next/server";
 
+export async function GET() {
+  return NextResponse.json(
+    { error: "Use POST /api/marketdata with { provider, action, params }" },
+    { status: 405 }
+  );
+}
+
 export async function POST(req: Request) {
   try {
     const { provider, action, params } = (await req.json()) as {
@@ -13,10 +20,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "provider and action are required" }, { status: 400 });
     }
 
+    console.log("[marketdata]", provider, action);
+
     // Finnhub
     if (provider === "finnhub") {
       const key = process.env.FINNHUB_API_KEY;
-      if (!key) return NextResponse.json({ error: "Missing FINNHUB_API_KEY" }, { status: 500 });
+      if (!key) {
+        return NextResponse.json({ error: "Missing FINNHUB_API_KEY" }, { status: 500 });
+      }
 
       if (action === "stock_symbols") {
         const exchange = params?.exchange ?? "US";
@@ -27,6 +38,17 @@ export async function POST(req: Request) {
         const data = await r.json();
         return NextResponse.json(data, { status: r.status });
       }
+      
+      if (action === "forex_symbols") {
+        const exchange = params?.exchange ?? "oanda";
+        const url = new URL("https://finnhub.io/api/v1/forex/symbol");
+        url.searchParams.set("exchange", exchange);
+        url.searchParams.set("token", key);
+        const r = await fetch(url);
+        const data = await r.json();
+        return NextResponse.json(data, { status: r.status });
+      }
+
 
       if (action === "stock_candles") {
         const { symbol, resolution, from, to } = params ?? {};
