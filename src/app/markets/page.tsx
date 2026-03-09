@@ -75,12 +75,9 @@ function Markets() {
         return 0;
       }
       if (sortBy === 'change') {
-        if (a.change && b.change) {
-          const changeA = parseFloat(a.change.replace(/[^0-9.\-%]+/g, ''));
-          const changeB = parseFloat(b.change.replace(/[^0-9.\-%]+/g, ''));
-          return changeB - changeA;
-        }
-        return 0;
+        const changeA = parseFloat(a.change?.replace(/[^0-9.\-%]+/g, '') || '0');
+        const changeB = parseFloat(b.change?.replace(/[^0-9.\-%]+/g, '') || '0');
+        return changeB - changeA;
       }
       return 0;
     });
