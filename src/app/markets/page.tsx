@@ -67,10 +67,23 @@ function Markets() {
 
     // Sorting
     currentAssets.sort((a, b) => {
-        if (sortBy === "name") return a.symbol.localeCompare(b.symbol);
-        // Add sorting for price and change if available in the data
+      if (sortBy === 'name') {
+        return a.symbol.localeCompare(b.symbol);
+      }
+      if (sortBy === 'price') {
+        // Add sorting for price if available in the data
         return 0;
-      });
+      }
+      if (sortBy === 'change') {
+        if (a.change && b.change) {
+          const changeA = parseFloat(a.change.replace(/[^0-9.\-%]+/g, ''));
+          const changeB = parseFloat(b.change.replace(/[^0-9.\-%]+/g, ''));
+          return changeB - changeA;
+        }
+        return 0;
+      }
+      return 0;
+    });
 
     return currentAssets;
   }, [activeTab, searchTerm, watchlist, allAssets, sortBy, assets]);

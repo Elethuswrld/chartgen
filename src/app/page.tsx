@@ -12,7 +12,7 @@ export default function Home() {
 
         <nav className="flex items-center gap-6 text-gray-300">
           <Link href="/markets" className="hover:text-white">Markets</Link>
-          <Link href="/trading-terminal" className="hover:text-white">Trade</Link>
+          <Link href="/trade/BTCUSDT" className="hover:text-white">Trade</Link>
           <Link href="/login" className="hover:text-white">Login</Link>
           <Link 
             href="/register"
