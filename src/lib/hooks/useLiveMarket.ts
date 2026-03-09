@@ -1,6 +1,6 @@
 
 import { useEffect, useRef } from "react";
-import { useMarketStore } from "@/store/marketStore";
+import useMarketStore from "@/store/marketStore";
 import { CandlestickData } from "@/components/Chart/chartTypes";
 import * as patterns from "@/lib/analysis/patterns";
 import { sendPatternAlert, requestNotificationPermission } from "@/lib/alerts/alertManager";

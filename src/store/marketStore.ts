@@ -72,7 +72,7 @@ const useMarketStore = create(
     }),
     {
       name: "market-storage",
-      partialize: (state) => ({ watchlist: state.watchlist, alerts: state.alerts }),
+      partialize: (state) => ({ watchlist: state.watchlist, alerts: state.alerts } as any),
     }
   )
 );
