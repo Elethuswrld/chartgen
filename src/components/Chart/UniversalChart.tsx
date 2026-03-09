@@ -1,60 +1,66 @@
 
 import { useEffect, useRef } from "react";
-import { ChartAdapter } from "./chartAdapter";
-import { ChartEventHandler } from "./chartTypes";
+import { createChart, IChartApi, ISeriesApi, UTCTimestamp } from "lightweight-charts";
+import { CandlestickData } from "./chartTypes";
+import { findDoji } from "../../lib/analysis/patterns";
 
 interface UniversalChartProps {
-  adapter: ChartAdapter;
-  onCrosshairMove?: ChartEventHandler;
-  onClick?: ChartEventHandler;
-  onVisibleRangeChange?: ChartEventHandler;
+  initialData: CandlestickData[];
 }
 
-export default function UniversalChart({ 
-  adapter,
-  onCrosshairMove, 
-  onClick, 
-  onVisibleRangeChange 
-}: UniversalChartProps) {
+export default function UniversalChart({ initialData }: UniversalChartProps) {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const candlestickSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    adapter.createChart(chartContainerRef.current, {
-        layout: {
-            background: { color: "#0E1424" },
-            textColor: "white",
-        },
-        grid: {
-            vertLines: { color: "rgba(255,255,255,0.05)" },
-            horzLines: { color: "rgba(255,255,255,0.05)" },
-        },
+    const chart = createChart(chartContainerRef.current, {
+      layout: {
+        background: { color: "#0E1424" },
+        textColor: "white",
+      },
+      grid: {
+        vertLines: { color: "rgba(255,255,255,0.05)" },
+        horzLines: { color: "rgba(255,255,255,0.05)" },
+      },
     });
+    chartRef.current = chart;
 
-    if (onCrosshairMove) {
-      adapter.subscribe('crosshairMove', onCrosshairMove);
-    }
-    if (onClick) {
-      adapter.subscribe('click', onClick);
-    }
-    if (onVisibleRangeChange) {
-      adapter.subscribe('visibleRangeChange', onVisibleRangeChange);
-    }
+    const candlestickSeries = chart.addCandlestickSeries();
+    candlestickSeriesRef.current = candlestickSeries;
 
     const handleResize = () => {
-      adapter.createChart(chartContainerRef.current!)
+      if (chartContainerRef.current) {
+        chart.resize(chartContainerRef.current.clientWidth, chartContainerRef.current.clientHeight);
+      }
     };
+
     window.addEventListener("resize", handleResize);
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      adapter.unsubscribe('crosshairMove', onCrosshairMove!);
-      adapter.unsubscribe('click', onClick!);
-      adapter.unsubscribe('visibleRangeChange', onVisibleRangeChange!);
-      adapter.destroy();
+      chart.remove();
     };
-  }, [adapter, onCrosshairMove, onClick, onVisibleRangeChange]);
+  }, []);
+
+  useEffect(() => {
+    if (candlestickSeriesRef.current) {
+      candlestickSeriesRef.current.setData(initialData.map(d => ({ ...d, time: d.time as UTCTimestamp })));
+
+      const dojiPatterns = findDoji(initialData);
+      const markers = dojiPatterns.map(pattern => ({
+        time: pattern.time as UTCTimestamp,
+        position: 'aboveBar' as const,
+        color: '#ffc107',
+        shape: 'arrowDown' as const,
+        text: 'Doji',
+      }));
+
+      candlestickSeriesRef.current.setMarkers(markers);
+    }
+  }, [initialData]);
 
   return <div ref={chartContainerRef} style={{ height: "100%", width: "100%" }} />;
 }

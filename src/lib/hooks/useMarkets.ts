@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { useFirestore } from './useFirestore';
 
@@ -32,29 +32,49 @@ const useMarkets = () => {
     return data;
   };
 
-  useEffect(() => {
-    const fetchAssets = async () => {
-      setIsLoading(true);
-      try {
-        const stockData = await postMarket("finnhub", "stock_symbols", { exchange: "US" });
+  const fetchAssets = useCallback(async (assetType: string, search: string = "") => {
+    setIsLoading(true);
+    try {
+      let data;
+      if (assetType === 'stocks') {
+        data = await postMarket("finnhub", "stock_symbols", { exchange: "US", search });
+      } else if (assetType === 'forex') {
+        // Server-side search not yet implemented for forex, filtering is done client-side for now
         const forexData = await postMarket("finnhub", "forex_symbols", { exchange: "oanda" });
+        data = search ? forexData.filter((s: any) => s.symbol.toLowerCase().includes(search.toLowerCase())) : forexData;
+      } else if (assetType === 'crypto') {
+        // Server-side search not yet implemented for crypto, filtering is done client-side for now
         const binanceData = await postMarket("binance", "exchange_info");
-
-        setAssets({
-          stocks: Array.isArray(stockData) ? stockData.slice(0, 100) : [],
-          forex: Array.isArray(forexData) ? forexData.slice(0, 100) : [],
-          crypto: Array.isArray(binanceData?.symbols) ? binanceData.symbols.slice(0, 100) : [],
-          commodities: [],
-        });
-      } catch (error) {
-        console.error("Error fetching assets:", error);
-      } finally {
-        setIsLoading(false);
+        const cryptoAssets = Array.isArray(binanceData?.symbols) ? binanceData.symbols : [];
+        data = search ? cryptoAssets.filter((s: any) => s.symbol.toLowerCase().includes(search.toLowerCase())) : cryptoAssets;
       }
-    };
+      
+      if (data) {
+        setAssets(prevAssets => ({
+            ...prevAssets,
+            [assetType]: Array.isArray(data) ? data.slice(0, 100) : []
+        }));
+      }
 
-    fetchAssets();
+    } catch (error) {
+      console.error(`Error fetching ${assetType}:`, error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    const fetchInitialAssets = async () => {
+        setIsLoading(true);
+        await Promise.all([
+            fetchAssets('stocks'),
+            fetchAssets('crypto'),
+            fetchAssets('forex'),
+        ]);
+        setIsLoading(false);
+    };
+    fetchInitialAssets();
+  }, [fetchAssets]);
 
   const topMovers = useMemo(() => {
     // Calculate top movers from the assets
@@ -72,7 +92,7 @@ const useMarkets = () => {
     }
   };
 
-  return { assets, watchlist, topMovers, isLoading, handleToggleWatchlist };
+  return { assets, watchlist, topMovers, isLoading, handleToggleWatchlist, fetchAssets };
 };
 
 export default useMarkets;

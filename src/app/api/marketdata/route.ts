@@ -1,5 +1,21 @@
 import "server-only";
 import { NextResponse } from "next/server";
+import { z } from "zod";
+
+const finnhubStockSymbolSchema = z.array(
+  z.object({
+    currency: z.string(),
+    description: z.string(),
+    displaySymbol: z.string(),
+    figi: z.string(),
+    isin: z.string().nullable(),
+    mic: z.string(),
+    shareClassFIGI: z.string(),
+    symbol: z.string(),
+    symbol2: z.string(),
+    type: z.string(),
+  })
+);
 
 export async function GET() {
   return NextResponse.json(
@@ -30,13 +46,23 @@ export async function POST(req: Request) {
       }
 
       if (action === "stock_symbols") {
-        const exchange = params?.exchange ?? "US";
+        const { exchange = "US", search = "" } = params ?? {};
         const url = new URL("https://finnhub.io/api/v1/stock/symbol");
         url.searchParams.set("exchange", exchange);
         url.searchParams.set("token", key);
         const r = await fetch(url);
         const data = await r.json();
-        return NextResponse.json(data, { status: r.status });
+        
+        const validation = finnhubStockSymbolSchema.safeParse(data);
+        if (!validation.success) {
+          return NextResponse.json({ error: "Invalid data from provider", details: validation.error }, { status: 500 });
+        }
+
+        const filteredData = search
+          ? validation.data.filter(s => s.symbol.toLowerCase().includes(search.toLowerCase()))
+          : validation.data;
+
+        return NextResponse.json(filteredData, { status: r.status });
       }
       
       if (action === "forex_symbols") {

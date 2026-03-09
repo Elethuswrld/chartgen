@@ -51,21 +51,20 @@ function Markets() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("name");
   const { user } = useAuth();
-  const { assets, watchlist, topMovers, isLoading, handleToggleWatchlist } = useMarkets();
+  const { assets, watchlist, topMovers, isLoading, handleToggleWatchlist, fetchAssets } = useMarkets();
+
+  useEffect(() => {
+    if (activeTab !== 'watchlist') {
+      fetchAssets(activeTab, searchTerm);
+    }
+  }, [activeTab, searchTerm, fetchAssets]);
 
   const allAssets: any[] = useMemo(() => Object.values(assets).flat(), [assets]);
 
   const filteredAssets = useMemo(() => {
     let currentAssets = activeTab === "watchlist" ? allAssets.filter((a) => watchlist.includes(a.symbol)) : assets[activeTab as keyof typeof assets] || [];
-    if (searchTerm) {
-      currentAssets = currentAssets.filter(
-        (asset) =>
-          asset.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (asset.description && asset.description.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
 
-    // Sorting
+    // Sorting is still done client-side
     currentAssets.sort((a, b) => {
       if (sortBy === 'name') {
         return a.symbol.localeCompare(b.symbol);
@@ -84,7 +83,7 @@ function Markets() {
     });
 
     return currentAssets;
-  }, [activeTab, searchTerm, watchlist, allAssets, sortBy, assets]);
+  }, [activeTab, watchlist, allAssets, sortBy, assets]);
 
   return (
     <div className="min-h-screen bg-[#020617] text-white px-4 sm:px-8 py-12">
