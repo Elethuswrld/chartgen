@@ -1,52 +1,80 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { CandlestickData } from "../components/Chart/chartTypes";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { OhlcData, Time } from 'lightweight-charts';
 
 interface AssetState {
-  candles: CandlestickData[];
-  patterns: string[];
+  candles: OhlcData<Time>[];
+  patterns: { name: string, time: number }[];
 }
 
-interface MarketStore {
+export interface Alert {
+  symbol: string;
+  pattern: string;
+  time: number;
+}
+
+interface MarketState {
   assets: Record<string, AssetState>;
-  updateAsset: (symbol: string, candle: CandlestickData) => void;
-  addPattern: (symbol: string, pattern: string) => void;
+  symbol: string;
+  ohlc: OhlcData<Time>[];
+  setSymbol: (symbol: string) => void;
+  fetchOhlc: (symbol: string, interval: string, since?: number) => Promise<void>;
+  updateAsset: (symbol: string, candle: OhlcData<Time>) => void;
+  addPattern: (symbol: string, name: string, time: number) => void;
   watchlist: string[];
   toggleWatchlist: (symbol: string) => void;
+  alerts: Alert[];
 }
 
 const useMarketStore = create(
-  persist<MarketStore>((set) => ({
-    assets: {},
-    watchlist: [],
-    updateAsset: (symbol, candle) =>
-      set((state) => {
-        const prev = state.assets[symbol]?.candles || [];
-        const updated = [...prev, candle].slice(-1000);
-        return {
-          assets: {
-            ...state.assets,
-            [symbol]: { candles: updated, patterns: state.assets[symbol]?.patterns || [] },
-          },
-        };
-      }),
-    addPattern: (symbol, pattern) =>
-      set((state) => ({
-        assets: {
-          ...state.assets,
-          [symbol]: {
-            ...(state.assets[symbol] || { candles: [], patterns: [] }),
-            patterns: [...(state.assets[symbol]?.patterns || []), pattern],
-          },
-        },
-      })),
-    toggleWatchlist: (symbol) =>
-      set((state) => ({
-        watchlist: state.watchlist.includes(symbol)
-          ? state.watchlist.filter((s) => s !== symbol)
-          : [...state.watchlist, symbol],
-      })),
-  }), { name: "market-storage" })
+  persist<MarketState>(
+    (set) => ({
+      assets: {},
+      symbol: 'BTCUSDT',
+      ohlc: [],
+      watchlist: [],
+      alerts: [],
+      setSymbol: (symbol: string) => set({ symbol }),
+      fetchOhlc: async (symbol, interval, since) => {
+        // This is a placeholder, the actual implementation is in marketStore.ts
+      },
+      updateAsset: (symbol, candle) =>
+        set((state) => {
+          const asset = state.assets[symbol] || { candles: [], patterns: [] };
+          const updatedCandles = [...asset.candles, candle].slice(-1000);
+          return {
+            assets: {
+              ...state.assets,
+              [symbol]: { ...asset, candles: updatedCandles },
+            },
+          };
+        }),
+      addPattern: (symbol, name, time) =>
+        set((state) => {
+          const asset = state.assets[symbol] || { candles: [], patterns: [] };
+          return {
+            assets: {
+              ...state.assets,
+              [symbol]: {
+                ...asset,
+                patterns: [...asset.patterns, { name, time }],
+              },
+            },
+            alerts: [{ symbol, pattern: name, time }, ...state.alerts].slice(0, 50),
+          };
+        }),
+      toggleWatchlist: (symbol) =>
+        set((state) => ({
+          watchlist: state.watchlist.includes(symbol)
+            ? state.watchlist.filter((s) => s !== symbol)
+            : [...state.watchlist, symbol],
+        })),
+    }),
+    {
+      name: "market-storage",
+      partialize: (state) => ({ watchlist: state.watchlist, alerts: state.alerts }),
+    }
+  )
 );
 
 export default useMarketStore;

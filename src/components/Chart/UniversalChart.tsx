@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { createChart, IChartApi, ISeriesApi, UTCTimestamp, MouseEventParams } from "lightweight-charts";
+import { createChart, IChartApi, ISeriesApi, UTCTimestamp, MouseEventParams, SeriesMarkerPosition } from "lightweight-charts";
 import useMarketStore from "../../store/marketStore";
 import { CandlestickData } from "./chartTypes";
 
@@ -79,16 +79,17 @@ export default function UniversalChart({ symbol }: UniversalChartProps) {
   useEffect(() => {
     if (!seriesRef.current || !asset?.candles?.length) return;
 
+    const convertedCandles = asset.candles.map(c => ({...c, time: (new Date(c.time as string).getTime() / 1000) as UTCTimestamp}));
+
     // Candlestick data
-    const chartData = asset.candles.map(d => ({ ...d, time: d.time as UTCTimestamp }));
-    seriesRef.current.setData(chartData);
+    seriesRef.current.setData(convertedCandles);
 
     // Auto visible range
-    if(chartData.length > 0) {
-        const lastTime = chartData[chartData.length - 1].time;
+    if(convertedCandles.length > 0) {
+        const lastTime = convertedCandles[convertedCandles.length - 1].time;
         chartRef.current?.timeScale().setVisibleRange({
-          from: (lastTime - 86400 * 2),
-          to: lastTime,
+          from: (lastTime - 86400 * 2) as UTCTimestamp,
+          to: lastTime as UTCTimestamp,
         });
     }
 
@@ -97,10 +98,10 @@ export default function UniversalChart({ symbol }: UniversalChartProps) {
     const candlePatternMap = new Map<UTCTimestamp, PatternEntry[]>();
     if (asset.patterns?.length) {
       // This logic assumes patterns are added chronologically and match the latest candles
-      const patternStartIdx = Math.max(0, asset.candles.length - asset.patterns.length);
-      const relevantCandles = asset.candles.slice(patternStartIdx);
+      const patternStartIdx = Math.max(0, convertedCandles.length - asset.patterns.length);
+      const relevantCandles = convertedCandles.slice(patternStartIdx);
 
-      asset.patterns.forEach((patternName, idx) => {
+      asset.patterns.forEach((pattern, idx) => {
         // The pattern belongs to the candle at the same relative index
         const candle = relevantCandles[idx];
         if (!candle) return;
@@ -108,7 +109,7 @@ export default function UniversalChart({ symbol }: UniversalChartProps) {
         if (!candlePatternMap.has(time)) {
           candlePatternMap.set(time, []);
         }
-        candlePatternMap.get(time)!.push({ name: patternName, time: candle.time as number });
+        candlePatternMap.get(time)!.push({ name: pattern.name, time: candle.time as number });
       });
     }
 
@@ -119,7 +120,7 @@ export default function UniversalChart({ symbol }: UniversalChartProps) {
       const style = patternStyles[mainPattern.name] || { color: "#fff", shape: "circle" };
       return [{
           time,
-          position: style.shape === "arrowUp" ? "belowBar" : "aboveBar",
+          position: (style.shape === "arrowUp" ? "belowBar" : "aboveBar") as SeriesMarkerPosition,
           color: style.color,
           shape: style.shape,
           text: patterns.map(p => p.name).join(', '), // Tooltip will show all
@@ -141,14 +142,18 @@ export default function UniversalChart({ symbol }: UniversalChartProps) {
         if(tooltip) tooltip.style.display = 'none';
         return;
       }
-      const patternsHere = candlePatternMap.get(data.time as UTCTimestamp) || [];
+      const timeAsTimestamp = (typeof data.time === 'string')
+        ? (new Date(data.time).getTime() / 1000) as UTCTimestamp
+        : data.time as UTCTimestamp;
+
+      const patternsHere = candlePatternMap.get(timeAsTimestamp) || [];
       if (!patternsHere.length) {
         if(tooltip) tooltip.style.display = 'none';
         return;
       }
 
       // Price coordinate
-      const y = chart.priceScale('right').priceToCoordinate(data.close);
+      const y = seriesRef.current.priceToCoordinate(data.close);
 
       tooltip.style.display = 'block';
       tooltip.style.left = `${param.point.x + 15}px`;
@@ -157,7 +162,7 @@ export default function UniversalChart({ symbol }: UniversalChartProps) {
         <div><strong>${symbol}</strong></div>
         <div>Patterns: ${patternsHere.map(p => p.name).join(', ')}</div>
         <div>O: ${data.open.toFixed(2)} H: ${data.high.toFixed(2)} L: ${data.low.toFixed(2)} C: ${data.close.toFixed(2)}</div>
-        <div>Time: ${new Date((data.time as number) * 1000).toLocaleString()}</div>
+        <div>Time: ${new Date((timeAsTimestamp as number) * 1000).toLocaleString()}</div>
       `;
     };
 

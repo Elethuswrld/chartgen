@@ -3,7 +3,7 @@
 
 import { useEffect, useRef } from 'react';
 import { createChart } from 'lightweight-charts';
-import { useMarketStore } from '@/stores/marketStore';
+import useMarketStore from '@/store/marketStore';
 
 export default function ChartCanvas() {
   const chartContainerRef = useRef<HTMLDivElement>(null);

@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react';
 import TradeShell from '@/features/trade/components/TradeShell';
-import { useMarketStore } from '@/stores/marketStore';
+import useMarketStore from '@/store/marketStore';
 
 export default function TradePage({ params }: { params: { symbol: string } }) {
   const { fetchOhlc } = useMarketStore();

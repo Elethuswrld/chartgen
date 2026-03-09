@@ -5,8 +5,8 @@ import { useEffect, useRef } from 'react';
 import { chartAdapter } from '@/components/Chart/chartAdapter';
 import { useAiStore } from '@/stores/aiStore';
 import { useUiStore } from '@/stores/uiStore';
-import { useMarketStore } from '@/stores/marketStore';
-import { OhlcData, Time } from 'lightweight-charts';
+import useMarketStore from '@/store/marketStore';
+import { OhlcData, Time, UTCTimestamp } from 'lightweight-charts';
 
 export default function ChartCanvas() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -16,19 +16,13 @@ export default function ChartCanvas() {
 
   useEffect(() => {
     if (chartContainerRef.current) {
-      chartAdapter.createChart(chartContainerRef.current);
+      chartAdapter.init(chartContainerRef.current);
 
       if (ohlc.length > 0) {
-        chartAdapter.createCandleSeries(ohlc as OhlcData<Time>[]);
+        const candlestickData = ohlc.map(d => ({ ...d, time: d.time as UTCTimestamp }));
+        chartAdapter.setData(candlestickData);
       }
 
-      chartAdapter.subscribeCrosshairMove(param => {
-        setHoverContext(param);
-      });
-
-      chartAdapter.subscribeClick(param => {
-        setSelectedCandle(param);
-      });
     }
   }, [ohlc, setHoverContext, setSelectedCandle]);
 

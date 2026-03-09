@@ -1,19 +1,12 @@
-import { ColorType, OhlcData, Time } from 'lightweight-charts';
+import { OhlcData, Time, IChartApi, ISeriesApi } from 'lightweight-charts';
 
-export interface CandlestickData {
-  time: string;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-}
+export type CandlestickData = OhlcData<Time>;
 
 export interface ChartAdapter {
-  createChart(container: HTMLElement): void;
-  createCandleSeries(data: CandlestickData[]): void;
-  subscribeCrosshairMove(callback: Function): void;
-  subscribeClick(callback: Function): void;
-  subscribeVisibleTimeRangeChange(callback: Function): void;
-  addOverlay(overlay: any): void;
-  getScreenshot(): string;
+  chart: IChartApi | null;
+  series: ISeriesApi<"Candlestick"> | null;
+  init: (container: HTMLElement, options?: any) => void;
+  addData: (data: CandlestickData) => void;
+  setData: (data: CandlestickData[]) => void;
+  destroy: () => void;
 }

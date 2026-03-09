@@ -1,8 +1,9 @@
+
 import { useEffect, useRef } from "react";
-import useMarketStore from "../../store/marketStore";
-import { CandlestickData } from "../../components/Chart/chartTypes";
-import * as patterns from "../../lib/analysis/patterns";
-import { sendPatternAlert, requestNotificationPermission } from "../../lib/alerts/alertManager";
+import { useMarketStore } from "@/store/marketStore";
+import { CandlestickData } from "@/components/Chart/chartTypes";
+import * as patterns from "@/lib/analysis/patterns";
+import { sendPatternAlert, requestNotificationPermission } from "@/lib/alerts/alertManager";
 
 const patternDetectors = {
   Doji: patterns.findDoji,
@@ -45,19 +46,21 @@ export function useLiveMarket(symbols: string[]) {
         updateAsset(update.s, candle);
 
         const assetCandles = useMarketStore.getState().assets[update.s]?.candles || [];
-        const extendedCandles = [...assetCandles, candle];
+        const extendedCandles = [...assetCandles]; // No need to add the candle again, updateAsset does it
 
         Object.entries(patternDetectors).forEach(([name, detector]) => {
           const found = detector(extendedCandles);
           if (found.length) {
-            const lastCandleTime = extendedCandles[extendedCandles.length - 1].time;
-            if (found[found.length - 1].time === lastCandleTime) {
-              addPattern(update.s, name);
+            const lastCandleInHistory = extendedCandles[extendedCandles.length - 1];
+            if (lastCandleInHistory && found[found.length - 1].time === lastCandleInHistory.time) {
+              const lastCandleTime = parseInt(String(lastCandleInHistory.time), 10);
+
+              addPattern(update.s, name, lastCandleTime);
               
               const alertKey = `${update.s}-${name}`;
-              if (lastAlerted[alertKey] !== lastCandleTime) {
+              if (lastAlerted[alertKey] !== String(lastCandleInHistory.time)) {
                 sendPatternAlert(update.s, name);
-                lastAlerted[alertKey] = lastCandleTime;
+                lastAlerted[alertKey] = String(lastCandleInHistory.time);
               }
             }
           }

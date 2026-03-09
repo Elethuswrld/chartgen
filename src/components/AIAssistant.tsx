@@ -1,75 +1,75 @@
-import React, { useState, useMemo } from 'react';
-import { useAI } from '../lib/hooks/useAI';
+
+'use client';
+
+import { useState } from 'react';
 import { AIPanel } from './AIPanel';
-import { useLiveMarket } from '../lib/hooks/useLiveMarket';
-import { MultiChartGrid } from './Dashboard/MultiChartGrid';
-import useMarketStore from '../store/marketStore';
 
 const assetClasses = {
-  Stocks: ['AAPL', 'GOOGL', 'MSFT'],
-  Forex: ['OANDA:EUR_USD', 'OANDA:GBP_USD', 'OANDA:USD_JPY'],
-  Crypto: ['BINANCE:BTCUSDT', 'BINANCE:ETHUSDT', 'BINANCE:SOLUSDT'],
+  Stocks: ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN'],
+  Crypto: ['BTC', 'ETH', 'XRP', 'LTC', 'ADA'],
+  Forex: ['EUR/USD', 'USD/JPY', 'GBP/USD', 'AUD/USD', 'USD/CAD'],
+  Futures: ['ES', 'NQ', 'CL', 'GC', 'ZB'],
+  Options: ['AAPL 240621C00150000', 'TSLA 240621C01000000', 'SPY 240621C00500000'],
 };
 
 type AssetClass = keyof typeof assetClasses;
 
-export const AIAssistant: React.FC = () => {
-  const { queryAI, model, setModel } = useAI();
+export default function AIAssistant() {
   const [activeTab, setActiveTab] = useState<AssetClass>('Stocks');
-  const { watchlist, toggleWatchlist } = useMarketStore();
-
-  const symbolsInTab = useMemo(() => assetClasses[activeTab], [activeTab]);
-  const symbolsToWatch = useMemo(() => Array.from(new Set([...symbolsInTab, ...watchlist])), [symbolsInTab, watchlist]);
-
-  useLiveMarket(symbolsToWatch);
-
-  const handleTabClick = (tab: AssetClass) => {
-    setActiveTab(tab);
-  };
+  const [selectedAsset, setSelectedAsset] = useState<string | null>(assetClasses.Stocks[0]);
+  const [model, setModel] = useState<'gpt' | 'deepseek'>('gpt');
 
   return (
     <div>
-      <AIPanel model={model} onModelChange={setModel} onQuery={() => {}} aiResponse="" isLoading={false} />
+      <AIPanel model={model} onModelChange={setModel} onGetTrend={() => {}} onGeneratePlan={() => {}} onExplain={() => {}} aiResponse="" isLoading={false} />
       <div style={{ marginTop: '20px' }}>
         <div style={{ display: 'flex', marginBottom: '10px' }}>
           {Object.keys(assetClasses).map(tab => (
             <button
               key={tab}
-              onClick={() => handleTabClick(tab as AssetClass)}
               style={{
-                padding: '10px',
-                border: activeTab === tab ? '1px solid #fff' : '1px solid #555',
-                background: activeTab === tab ? '#333' : '#111',
-                color: 'white',
+                padding: '10px 20px',
+                border: 'none',
+                borderBottom: activeTab === tab ? '2px solid #0070f3' : '2px solid transparent',
+                background: 'transparent',
+                color: activeTab === tab ? '#0070f3' : '#ccc',
+                cursor: 'pointer',
+              }}
+              onClick={() => {
+                setActiveTab(tab as AssetClass);
+                setSelectedAsset(null);
               }}
             >
               {tab}
             </button>
           ))}
         </div>
-
-        <MultiChartGrid symbols={symbolsInTab} />
-
-        <div style={{ marginTop: '20px' }}>
-          <h3>Watchlist</h3>
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            {symbolsToWatch.map(sym => (
-              <button
-                key={sym}
-                onClick={() => toggleWatchlist(sym)}
+        <div style={{ display: 'flex' }}>
+          <div style={{ width: '200px', borderRight: '1px solid #333' }}>
+            {(assetClasses[activeTab] as string[]).map(asset => (
+              <div
+                key={asset}
                 style={{
-                  background: watchlist.includes(sym) ? '#0f0' : '#222',
-                  color: watchlist.includes(sym) ? 'black' : 'white',
-                  padding: '6px 12px',
-                  border: '1px solid #555',
+                  padding: '10px',
+                  background: selectedAsset === asset ? '#0070f3' : 'transparent',
+                  color: selectedAsset === asset ? 'white' : '#ccc',
+                  cursor: 'pointer',
                 }}
+                onClick={() => setSelectedAsset(asset)}
               >
-                {sym} {watchlist.includes(sym) ? '✓' : '+'}
-              </button>
+                {asset}
+              </div>
             ))}
+          </div>
+          <div style={{ flex: 1, padding: '20px' }}>
+            {selectedAsset ? (
+              <p>Details for {selectedAsset}</p>
+            ) : (
+              <p>Select an asset to see details</p>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
-};
+}

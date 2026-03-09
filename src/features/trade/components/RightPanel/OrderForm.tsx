@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMarketStore } from '../../../../stores/marketStore';
+import useMarketStore from '@/store/marketStore';
 
 export default function OrderForm() {
   const symbol = useMarketStore(state => state.symbol);
