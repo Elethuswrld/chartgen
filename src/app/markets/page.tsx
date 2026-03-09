@@ -71,8 +71,9 @@ function Markets() {
         return a.symbol.localeCompare(b.symbol);
       }
       if (sortBy === 'price') {
-        // Add sorting for price if available in the data
-        return 0;
+        const priceA = parseFloat(a.price?.replace(/[^0-9.\-%]+/g, '') || '0');
+        const priceB = parseFloat(b.price?.replace(/[^0-9.\-%]+/g, '') || '0');
+        return priceB - priceA;
       }
       if (sortBy === 'change') {
         const changeA = parseFloat(a.change?.replace(/[^0-9.\-%]+/g, '') || '0');
