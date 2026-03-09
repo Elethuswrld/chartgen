@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import useMarketStore from "../../store/marketStore";
 import { CandlestickData } from "../../components/Chart/chartTypes";
 import * as patterns from "../../lib/analysis/patterns";
+import { sendPatternAlert, requestNotificationPermission } from "../../lib/alerts/alertManager";
 
 const patternDetectors = {
   Doji: patterns.findDoji,
@@ -12,9 +13,15 @@ const patternDetectors = {
   EveningStar: patterns.findEveningStar,
 };
 
+const lastAlerted: Record<string, string> = {}; // key: `${symbol}-${pattern}`
+
 export function useLiveMarket(symbols: string[]) {
   const wsRef = useRef<WebSocket | null>(null);
   const { updateAsset, addPattern } = useMarketStore();
+
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
 
   useEffect(() => {
     if (!symbols.length) return;
@@ -38,11 +45,21 @@ export function useLiveMarket(symbols: string[]) {
         updateAsset(update.s, candle);
 
         const assetCandles = useMarketStore.getState().assets[update.s]?.candles || [];
-        const recentCandles = [...assetCandles, candle].slice(-20); // check only last 20
+        const extendedCandles = [...assetCandles, candle];
+
         Object.entries(patternDetectors).forEach(([name, detector]) => {
-          const found = detector(recentCandles);
-          if (found.length && found[found.length - 1].time === candle.time) {
-            addPattern(update.s, name);
+          const found = detector(extendedCandles);
+          if (found.length) {
+            const lastCandleTime = extendedCandles[extendedCandles.length - 1].time;
+            if (found[found.length - 1].time === lastCandleTime) {
+              addPattern(update.s, name);
+              
+              const alertKey = `${update.s}-${name}`;
+              if (lastAlerted[alertKey] !== lastCandleTime) {
+                sendPatternAlert(update.s, name);
+                lastAlerted[alertKey] = lastCandleTime;
+              }
+            }
           }
         });
       });
