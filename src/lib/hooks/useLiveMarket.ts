@@ -1,15 +1,15 @@
 import { useEffect, useRef } from "react";
 import useMarketStore from "../../store/marketStore";
 import { CandlestickData } from "../../components/Chart/chartTypes";
-import * as patternMatchers from "../../lib/analysis/patterns";
+import * as patterns from "../../lib/analysis/patterns";
 
 const patternDetectors = {
-  Doji: patternMatchers.findDoji,
-  Engulfing: patternMatchers.findEngulfing,
-  Hammer: patternMatchers.findHammer,
-  ShootingStar: patternMatchers.findShootingStar,
-  MorningStar: patternMatchers.findMorningStar,
-  EveningStar: patternMatchers.findEveningStar,
+  Doji: patterns.findDoji,
+  Engulfing: patterns.findEngulfing,
+  Hammer: patterns.findHammer,
+  ShootingStar: patterns.findShootingStar,
+  MorningStar: patterns.findMorningStar,
+  EveningStar: patterns.findEveningStar,
 };
 
 export function useLiveMarket(symbols: string[]) {
@@ -18,16 +18,13 @@ export function useLiveMarket(symbols: string[]) {
 
   useEffect(() => {
     if (!symbols.length) return;
-
     const ws = new WebSocket(`wss://ws.finnhub.io?token=${process.env.NEXT_PUBLIC_FINNHUB_KEY}`);
     wsRef.current = ws;
 
-    ws.onopen = () => {
-      symbols.forEach((sym) => ws.send(JSON.stringify({ type: "subscribe", symbol: sym })));
-    };
+    ws.onopen = () => symbols.forEach(sym => ws.send(JSON.stringify({ type: "subscribe", symbol: sym })));
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+    ws.onmessage = (evt) => {
+      const data = JSON.parse(evt.data);
       if (!data?.data) return;
 
       data.data.forEach((update: any) => {
@@ -41,16 +38,11 @@ export function useLiveMarket(symbols: string[]) {
         updateAsset(update.s, candle);
 
         const assetCandles = useMarketStore.getState().assets[update.s]?.candles || [];
-        const extendedCandles = [...assetCandles, candle];
-
+        const recentCandles = [...assetCandles, candle].slice(-20); // check only last 20
         Object.entries(patternDetectors).forEach(([name, detector]) => {
-          const found = detector(extendedCandles);
-          if (found.length) {
-            // Check if the last candle is a pattern
-            const lastCandleTime = extendedCandles[extendedCandles.length -1].time
-            if (found[found.length -1].time === lastCandleTime) {
-                 addPattern(update.s, name);
-            }
+          const found = detector(recentCandles);
+          if (found.length && found[found.length - 1].time === candle.time) {
+            addPattern(update.s, name);
           }
         });
       });
@@ -58,10 +50,10 @@ export function useLiveMarket(symbols: string[]) {
 
     return () => {
       if (wsRef.current) {
-        symbols.forEach((sym) => {
-            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                wsRef.current.send(JSON.stringify({ type: "unsubscribe", symbol: sym }));
-            }
+        symbols.forEach(sym => {
+             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify({ type: "unsubscribe", symbol: sym }))
+             }
         });
         wsRef.current.close();
       }

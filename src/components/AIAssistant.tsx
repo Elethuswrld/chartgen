@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useAI } from '../lib/hooks/useAI';
 import { AIPanel } from './AIPanel';
-import UniversalChart from './Chart/UniversalChart';
 import { useLiveMarket } from '../lib/hooks/useLiveMarket';
+import { MultiChartGrid } from './Dashboard/MultiChartGrid';
+import useMarketStore from '../store/marketStore';
 
 const assetClasses = {
   Stocks: ['AAPL', 'GOOGL', 'MSFT'],
@@ -13,41 +14,26 @@ const assetClasses = {
 type AssetClass = keyof typeof assetClasses;
 
 export const AIAssistant: React.FC = () => {
-  const { queryAI, loading, model, setModel } = useAI();
-  const [aiResponse, setAiResponse] = useState('');
+  const { queryAI, model, setModel } = useAI();
   const [activeTab, setActiveTab] = useState<AssetClass>('Stocks');
+  const { watchlist, toggleWatchlist } = useMarketStore();
 
-  const symbols = useMemo(() => assetClasses[activeTab], [activeTab]);
-  const [selectedSymbol, setSelectedSymbol] = useState(symbols[0]);
+  const symbolsInTab = useMemo(() => assetClasses[activeTab], [activeTab]);
+  const symbolsToWatch = useMemo(() => Array.from(new Set([...symbolsInTab, ...watchlist])), [symbolsInTab, watchlist]);
 
-  useLiveMarket(symbols);
-
-  const handleQuery = async (prompt: string) => {
-    const response = await queryAI(prompt);
-    setAiResponse(response || '');
-  };
+  useLiveMarket(symbolsToWatch);
 
   const handleTabClick = (tab: AssetClass) => {
     setActiveTab(tab);
-    setSelectedSymbol(assetClasses[tab][0]);
   };
 
   return (
     <div>
-      <AIPanel 
-        aiResponse={aiResponse}
-        isLoading={loading}
-        onExplain={() => handleQuery('Explain this move')}
-        onGeneratePlan={() => handleQuery('Generate trade plan')}
-        onGetTrend={() => handleQuery('Whats the trend?')}
-        model={model}
-        onModelChange={setModel}
-      />
-
+      <AIPanel model={model} onModelChange={setModel} onQuery={() => {}} aiResponse="" isLoading={false} />
       <div style={{ marginTop: '20px' }}>
         <div style={{ display: 'flex', marginBottom: '10px' }}>
-          {Object.keys(assetClasses).map((tab) => (
-            <button 
+          {Object.keys(assetClasses).map(tab => (
+            <button
               key={tab}
               onClick={() => handleTabClick(tab as AssetClass)}
               style={{
@@ -62,18 +48,26 @@ export const AIAssistant: React.FC = () => {
           ))}
         </div>
 
-        <select 
-          value={selectedSymbol} 
-          onChange={(e) => setSelectedSymbol(e.target.value)}
-          style={{ marginBottom: '10px', padding: '8px' }}
-        >
-          {symbols.map(symbol => (
-            <option key={symbol} value={symbol}>{symbol}</option>
-          ))}
-        </select>
+        <MultiChartGrid symbols={symbolsInTab} />
 
-        <div style={{ height: '400px' }}>
-          <UniversalChart symbol={selectedSymbol} />
+        <div style={{ marginTop: '20px' }}>
+          <h3>Watchlist</h3>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            {symbolsToWatch.map(sym => (
+              <button
+                key={sym}
+                onClick={() => toggleWatchlist(sym)}
+                style={{
+                  background: watchlist.includes(sym) ? '#0f0' : '#222',
+                  color: watchlist.includes(sym) ? 'black' : 'white',
+                  padding: '6px 12px',
+                  border: '1px solid #555',
+                }}
+              >
+                {sym} {watchlist.includes(sym) ? '✓' : '+'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
