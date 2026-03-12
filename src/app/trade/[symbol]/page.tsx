@@ -1,9 +1,9 @@
-
 'use client';
 
 import { useEffect } from 'react';
 import TradeShell from '@/features/trade/components/TradeShell';
 import useMarketStore from '@/store/marketStore';
+import AuthGuard from '@/components/AuthGuard';
 
 export default function TradePage({ params }: { params: { symbol: string } }) {
   const { fetchOhlc } = useMarketStore();
@@ -12,5 +12,9 @@ export default function TradePage({ params }: { params: { symbol: string } }) {
     fetchOhlc(params.symbol, '1h');
   }, [params.symbol, fetchOhlc]);
 
-  return <TradeShell symbol={params.symbol} />;
+  return (
+    <AuthGuard>
+      <TradeShell symbol={params.symbol} />
+    </AuthGuard>
+  );
 }

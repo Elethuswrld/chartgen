@@ -24,10 +24,10 @@ const seedData = {
   ],
 };
 
-export const seedWatchlist = async () => {
+export const seedWatchlist = async (userId: string) => {
   if (!db) return;
   try {
-    await setDoc(doc(db, 'watchlist/user-default'), seedData);
+    await setDoc(doc(db, `users/${userId}/watchlist/default`), seedData);
     console.log('Watchlist data seeded successfully!');
   } catch (error) {
     console.error('Error seeding watchlist data:', error);

@@ -1,8 +1,11 @@
-"use client";
+'use client';
 
 import Link from "next/link";
+import { useAuth } from "../lib/hooks/useAuth";
 
 export default function Home() {
+  const { user, logout } = useAuth();
+
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       
@@ -13,13 +16,22 @@ export default function Home() {
         <nav className="flex items-center gap-6 text-gray-300">
           <Link href="/markets" className="hover:text-white">Markets</Link>
           <Link href="/trade/BTCUSDT" className="hover:text-white">Trade</Link>
-          <Link href="/login" className="hover:text-white">Login</Link>
-          <Link 
-            href="/register"
-            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-semibold"
-          >
-            Sign Up
-          </Link>
+          {user ? (
+            <>
+              <Link href="/profile" className="hover:text-white">Profile</Link>
+              <button onClick={logout} className="hover:text-white">Logout</button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="hover:text-white">Login</Link>
+              <Link 
+                href="/register"
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-semibold"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
         </nav>
       </header>
 

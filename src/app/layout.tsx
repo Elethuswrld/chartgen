@@ -4,6 +4,7 @@ import "./globals.css";
 import { SeedData } from "../components/SeedData";
 import { ThemeProvider } from "../components/ThemeProvider";
 import { BackToTopButton } from "../components/BackToTopButton";
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,6 +30,7 @@ export default function RootLayout({
           <SeedData />
           {children}
           <BackToTopButton />
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>
