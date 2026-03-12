@@ -26,7 +26,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen py-2">
         <h1 className="text-4xl font-bold mb-8">Please verify your email</h1>
-        <p className="mb-4">We've sent a verification link to your email address. Please click the link to continue.</p>
+        <p className="mb-4">We&apos;ve sent a verification link to your email address. Please click the link to continue.</p>
         <button
           onClick={logout}
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
