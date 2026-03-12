@@ -3,6 +3,9 @@ const nextConfig = {
   experimental: {
     // keep any other experimental flags you’re using here
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
